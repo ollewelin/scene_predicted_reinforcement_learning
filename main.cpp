@@ -20,6 +20,8 @@ using namespace std;
 #define MOVE_UP 1
 #define MOVE_STOP 2
 
+
+
 vector<int> fisher_yates_shuffle(vector<int> table);
 
 int main()
@@ -50,9 +52,28 @@ int main()
     const int pixel_width = 35;  /// The input data pixel width, note game_Height = 200
     Size image_size_reduced(pixel_height, pixel_width); // the dst image size,e.g.50x50
     Mat resized_grapics, game_video_full_size;
-
-
     const int nr_frames_strobed = 4; // 4 Images in serie to make neural network to see movments
+
+    typedef struct
+    {
+        vector<double> video_frame; // vector of doubles to store the video frame
+        int selected_action;        // integer to store the selected action
+        int dice_used;              // integer to store if the dice was used = 1 or not used = 0
+        double present_rewards;     // double to store the present rewards
+        double next_Q_rewards;      // double to store the future rewards in next state
+    } replay_data_struct;
+
+    replay_data_struct replay_data;
+    replay_data.video_frame.resize(pixel_height * pixel_width);
+
+    vector<replay_data_struct> replay_data_buffer;
+    for (int i = 0; i < gameObj1.nr_of_frames; ++i)
+    {
+        replay_data_struct replay_data_item;
+        replay_data_item.video_frame.resize(pixel_height * pixel_width);
+        replay_data_buffer.push_back(replay_data_item);
+    }
+
     //=========== Neural Network size settings ==============
     fc_m_resnet next_scene_fc_net;
     fc_m_resnet policy_fc_net;
@@ -148,8 +169,6 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
 
-    int g_replay_nr = 0;                                                    // Used during play
-    int single_game_state_size = gameObj1.nr_of_frames - nr_frames_strobed; // the first for frames will not have any state
 
     cout << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
 
@@ -176,8 +195,7 @@ int main()
     game_video_full_size = gameObj1.gameGrapics.clone();
     resize(game_video_full_size, resized_grapics, image_size_reduced);
     imshow("resized_grapics", resized_grapics); ///  resize(src, dst, size);
-    int replay_row_size = pixel_height * gameObj1.nr_of_frames;
-    int replay_col_size = pixel_width * g_replay_size;
+
 
     const int max_nr_epochs = 1000000;
     for (int epoch = 0; epoch < max_nr_epochs; epoch++)
@@ -186,7 +204,6 @@ int main()
         cout << "epsilon = " << epsilon << endl;
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
-            g_replay_nr = g_replay_cnt;
             gameObj1.start_episode();
             for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
             {
