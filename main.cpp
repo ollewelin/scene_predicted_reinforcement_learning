@@ -26,9 +26,13 @@ vector<int> fisher_yates_shuffle(vector<int> table);
 
 int main()
 {
+    int skip_scene_predicotr_only_for_benchmarking = 0;// set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
     char answer;
     srand(static_cast<unsigned>(time(NULL))); // Seed the randomizer
     cout << "Scene prdictable reinforcement learning game" << endl;
+
+    cout << "On going coding TODO. Not finnish...... " << endl;
+
     int total_plays = 0;
     //======================================================
     pinball_game gameObj1;      /// Instaniate the pinball game
@@ -59,20 +63,21 @@ int main()
         vector<double> video_frame; // vector of doubles to store the video frame
         int selected_action;        // integer to store the selected action
         int dice_used;              // integer to store if the dice was used = 1 or not used = 0
-        double present_rewards;     // double to store the present rewards
-        double next_Q_rewards;      // double to store the future rewards in next state
+        int terminal_state;     // 1 = we are in terminal state. 0 normal state
+        double rewards_Q;      // store the rewards at real game. Then recalculate this before training with a decay factor
     } replay_data_struct;
 
     replay_data_struct replay_data;
     replay_data.video_frame.resize(pixel_height * pixel_width);
 
-    vector<replay_data_struct> replay_data_buffer;
+    vector<replay_data_struct> replay_1_episode_data_buffer;
     for (int i = 0; i < gameObj1.nr_of_frames; ++i)
     {
         replay_data_struct replay_data_item;
         replay_data_item.video_frame.resize(pixel_height * pixel_width);
-        replay_data_buffer.push_back(replay_data_item);
+        replay_1_episode_data_buffer.push_back(replay_data_item);
     }
+
 
     //=========== Neural Network size settings ==============
     fc_m_resnet next_scene_fc_net;
@@ -88,20 +93,29 @@ int main()
     next_scene_fc_net.block_type = 2;
     next_scene_fc_net.use_softmax = 0;                         // 0= Not softmax for DQN reinforcement learning
     next_scene_fc_net.activation_function_mode = 2;            // ReLU for all fully connected activation functions except output last layer
-    next_scene_fc_net.force_last_activation_function_mode = 3; // 1 = Last output last layer will have Sigmoid functions regardless mode settings of activation_function_mode
+    next_scene_fc_net.force_last_activation_function_mode = 0; // 1 = Last output last layer will have Sigmoid functions regardless mode settings of activation_function_mode
     next_scene_fc_net.use_skip_connect_mode = 0;               // 1 for residual network architetcture
     next_scene_fc_net.use_dropouts = 0;
     next_scene_fc_net.dropout_proportion = 0.0;
     next_scene_fc_net.clip_deriv = all_clip_der;
 
-    // output channels
-    int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed;
-    cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
+    int nr_of_actions = 3;
+
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
-    const int next_scene_hid_nodes_L2 = 100;
-    const int next_scene_hid_nodes_L3 = 10;
-    const int next_scene_out_nodes = 3; // Up, Down, Stop
+    const int next_scene_hid_nodes_L2 = 75;
+    const int next_scene_hid_nodes_L3 = 200;
+    const int next_scene_out_nodes = pixel_height * pixel_width; // 
+    const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
+    // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
+    Mat mat_input_weights_next_sc, mat_input_strobe_frames, mat_next_scene_all_actions;
+    mat_input_weights_next_sc.create(pixel_height * nr_frames_strobed * next_scene_hid_nodes_L1, pixel_width, CV_32FC1);
+    mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
+    mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
+    
+
+    cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
+    
     for (int i = 0; i < next_scene_inp_nodes; i++)
     {
         next_scene_fc_net.input_layer.push_back(0.0);
@@ -169,6 +183,12 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
 
+
+    vector<vector<replay_data_struct>> replay_buffer;
+    for(int i=0;i<g_replay_size;i++)
+    {
+        replay_buffer.push_back(replay_1_episode_data_buffer);
+    }
 
     cout << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
 
