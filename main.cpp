@@ -67,15 +67,17 @@ int main()
         double rewards_Q;      // store the rewards at real game. Then recalculate this before training with a decay factor
     } replay_data_struct;
 
-    replay_data_struct replay_data;
-    replay_data.video_frame.resize(pixel_height * pixel_width);
+    replay_data_struct replay_struct_item;
+    replay_struct_item.selected_action = 0;
+    replay_struct_item.dice_used = 0;
+    replay_struct_item.terminal_state = 0;
+    replay_struct_item.rewards_Q = 0.0;
+    replay_struct_item.video_frame.resize(pixel_height * pixel_width);
 
     vector<replay_data_struct> replay_1_episode_data_buffer;
     for (int i = 0; i < gameObj1.nr_of_frames; ++i)
     {
-        replay_data_struct replay_data_item;
-        replay_data_item.video_frame.resize(pixel_height * pixel_width);
-        replay_1_episode_data_buffer.push_back(replay_data_item);
+        replay_1_episode_data_buffer.push_back(replay_struct_item);
     }
 
 
@@ -87,17 +89,25 @@ int main()
     string next_scene_net_filename;
     next_scene_net_filename = "next_scene_net_weights.dat";
 
-    const int all_clip_der = 0;
-
     next_scene_fc_net.get_version();
     next_scene_fc_net.block_type = 2;
-    next_scene_fc_net.use_softmax = 0;                         // 0= Not softmax for DQN reinforcement learning
+    next_scene_fc_net.use_softmax = 0;                         // 0= Not softmax for reinforcement learning
     next_scene_fc_net.activation_function_mode = 2;            // ReLU for all fully connected activation functions except output last layer
     next_scene_fc_net.force_last_activation_function_mode = 0; // 1 = Last output last layer will have Sigmoid functions regardless mode settings of activation_function_mode
     next_scene_fc_net.use_skip_connect_mode = 0;               // 1 for residual network architetcture
     next_scene_fc_net.use_dropouts = 0;
     next_scene_fc_net.dropout_proportion = 0.0;
-    next_scene_fc_net.clip_deriv = all_clip_der;
+    next_scene_fc_net.clip_deriv = 0;
+
+    policy_fc_net.block_type = 2;
+    policy_fc_net.use_softmax = 0;
+    policy_fc_net.activation_function_mode = 2;
+    policy_fc_net.force_last_activation_function_mode = 0;
+    policy_fc_net.use_skip_connect_mode = 0;
+    policy_fc_net.use_dropouts = 0;
+    policy_fc_net.dropout_proportion = 0.0;
+    policy_fc_net.clip_deriv = 0;
+
 
     int nr_of_actions = 3;
 
@@ -113,9 +123,17 @@ int main()
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     
-
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
-    
+
+
+    const int policy_net_hid_layers = 3;
+    const int policy_net_hid_nodes_L1 = 200;
+    const int policy_net_hid_nodes_L2 = 50;
+    const int policy_net_hid_nodes_L3 = 10;
+    const int policy_net_out_nodes = nr_of_actions; // 
+    const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
+
+//---------- next scene fc net layer setup --------    
     for (int i = 0; i < next_scene_inp_nodes; i++)
     {
         next_scene_fc_net.input_layer.push_back(0.0);
@@ -131,6 +149,24 @@ int main()
     next_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L1);
     next_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L2);
     next_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L3);
+
+//-------- policy net layer setup -----
+    for (int i = 0; i < policy_net_inp_nodes; i++)
+    {
+        policy_fc_net.input_layer.push_back(0.0);
+        policy_fc_net.i_layer_delta.push_back(0.0);
+    }
+
+    for (int i = 0; i < policy_net_out_nodes; i++)
+    {
+        policy_fc_net.output_layer.push_back(0.0);
+        policy_fc_net.target_layer.push_back(0.0);
+    }
+    policy_fc_net.set_nr_of_hidden_layers(next_scene_hid_layers);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L1);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L2);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L3);
+
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
     //============ Neural Network Size setup is finnish ! ==================
 
