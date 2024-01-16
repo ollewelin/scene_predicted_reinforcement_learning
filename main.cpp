@@ -20,7 +20,22 @@ using namespace std;
 #define MOVE_UP 1
 #define MOVE_STOP 2
 
-
+int do_dice_action(int number_of_actions)
+{
+    float max_decision = 0.0f;
+    int decided_action = 0;
+    for (int i = 0; i < number_of_actions; i++) // end_out_nodes = numbere of actions
+    {
+        float action_dice = (float)(rand() % 65535) / 65536; // Through a fair dice. Random value 0..1.0 range
+        // cout << "action_dice = " << action_dice << endl;
+        if (action_dice > (float)max_decision)
+        {
+            max_decision = (float)action_dice;
+            decided_action = i;
+        }
+    }
+    return decided_action;
+}
 
 vector<int> fisher_yates_shuffle(vector<int> table);
 
@@ -168,6 +183,22 @@ int main()
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L3);
 
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
+
+    typedef struct
+    {
+        int frame_index_of_rand_act;
+        int episode_index_of_rand_act;
+    } random_action_data_struct;
+    random_action_data_struct rand_act_data_item;
+    rand_act_data_item.frame_index_of_rand_act = 0;
+    rand_act_data_item.episode_index_of_rand_act = 0;
+    vector<random_action_data_struct> rand_action_list;
+    rand_action_list.clear();
+    for(int i=0;i<10;i++)
+    {
+        rand_action_list.push_back(rand_act_data_item);
+    }
+
     //============ Neural Network Size setup is finnish ! ==================
 
     //=== Now setup the hyper parameters of the Neural Network ====
@@ -261,10 +292,12 @@ int main()
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
             gameObj1.start_episode();
+            gameObj1.move_up = do_dice_action(nr_of_actions);            
             for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
             {
                 gameObj1.frame = frame_g;
                 gameObj1.run_episode();
+                
                 game_video_full_size = gameObj1.gameGrapics.clone();
                 resize(game_video_full_size, resized_grapics, image_size_reduced);
                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
