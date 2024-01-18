@@ -89,6 +89,7 @@ int main()
     replay_struct_item.rewards_Q = 0.0;
     replay_struct_item.video_frame.resize(pixel_height * pixel_width);
 
+ 
     vector<replay_data_struct> replay_1_episode_data_buffer;
     for (int i = 0; i < gameObj1.nr_of_frames; ++i)
     {
@@ -297,10 +298,43 @@ int main()
             {
                 gameObj1.frame = frame_g;
                 gameObj1.run_episode();
-                
                 game_video_full_size = gameObj1.gameGrapics.clone();
                 resize(game_video_full_size, resized_grapics, image_size_reduced);
                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
+                for(int row=0;row<pixel_height;row++)
+                {
+                    for(int col=0;col<pixel_width;col++)
+                    {
+                        replay_buffer[g_replay_cnt][frame_g].video_frame[row*pixel_width + col] = resized_grapics.at<float>(row, col);
+                    }
+                }
+                
+
+
+                if (frame_g > nr_frames_strobed - 1) // Wait until all 4 images is up there in the game after start
+                {
+                    int inp_n_idx = 0;
+                    for(int f=0;f<nr_frames_strobed;f++)
+                    {
+                        for(int pix_idx=0;pix_idx<(pixel_width*pixel_height);pix_idx++)
+                        {
+                           float pixel_d = replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                           next_scene_fc_net.input_layer[inp_n_idx] = (double) pixel_d;
+                           inp_n_idx++;
+                        }
+                    }
+                    double action_one_hot = 0.0;
+                    for(int act=0;act<nr_of_actions;act++)
+                    {
+                        //TODO store all action predicced next frame
+                  //      next_scene_fc_net.input_layer[inp_n_idx] = action_one_hot;
+                  //      inp_n_idx++;
+                    }
+                }
+                else
+                {
+                    gameObj1.move_up = do_dice_action(nr_of_actions);
+                }
             }
        }
 
