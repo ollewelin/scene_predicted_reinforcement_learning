@@ -41,7 +41,7 @@ vector<int> fisher_yates_shuffle(vector<int> table);
 
 int main()
 {
-    int skip_scene_predicotr_only_for_benchmarking = 0;// set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
+    int skip_scene_predicotr_only_for_benchmarking = 0; // set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
     char answer;
     srand(static_cast<unsigned>(time(NULL))); // Seed the randomizer
     cout << "Scene prdictable reinforcement learning game" << endl;
@@ -67,8 +67,8 @@ int main()
     gameObj1.enabel_3_state = 1; // Input Action from Agent. move_up: 1= Move up pad. 0= Move down pad. 2= STOP used only when enabel_3_state = 1
 
     // Set up a OpenCV mat
-    const int pixel_height = 35; /// The input data pixel height, note game_Width = 220
-    const int pixel_width = 35;  /// The input data pixel width, note game_Height = 200
+    const int pixel_height = 35;                        /// The input data pixel height, note game_Width = 220
+    const int pixel_width = 35;                         /// The input data pixel width, note game_Height = 200
     Size image_size_reduced(pixel_height, pixel_width); // the dst image size,e.g.50x50
     Mat resized_grapics, game_video_full_size;
     const int nr_frames_strobed = 4; // 4 Images in serie to make neural network to see movments
@@ -78,8 +78,8 @@ int main()
         vector<double> video_frame; // vector of doubles to store the video frame
         int selected_action;        // integer to store the selected action
         int dice_used;              // integer to store if the dice was used = 1 or not used = 0
-        int terminal_state;     // 1 = we are in terminal state. 0 normal state
-        double rewards_Q;      // store the rewards at real game. Then recalculate this before training with a decay factor
+        int terminal_state;         // 1 = we are in terminal state. 0 normal state
+        double rewards_Q;           // store the rewards at real game. Then recalculate this before training with a decay factor
     } replay_data_struct;
 
     replay_data_struct replay_struct_item;
@@ -89,13 +89,11 @@ int main()
     replay_struct_item.rewards_Q = 0.0;
     replay_struct_item.video_frame.resize(pixel_height * pixel_width);
 
- 
     vector<replay_data_struct> replay_1_episode_data_buffer;
     for (int i = 0; i < gameObj1.nr_of_frames; ++i)
     {
         replay_1_episode_data_buffer.push_back(replay_struct_item);
     }
-
 
     //=========== Neural Network size settings ==============
     fc_m_resnet next_scene_fc_net;
@@ -124,32 +122,30 @@ int main()
     policy_fc_net.dropout_proportion = 0.0;
     policy_fc_net.clip_deriv = 0;
 
-
     int nr_of_actions = 3;
 
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
     const int next_scene_hid_nodes_L2 = 75;
     const int next_scene_hid_nodes_L3 = 200;
-    const int next_scene_out_nodes = pixel_height * pixel_width; // 
+    const int next_scene_out_nodes = pixel_height * pixel_width; //
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_weights_next_sc, mat_input_strobe_frames, mat_next_scene_all_actions;
     mat_input_weights_next_sc.create(pixel_height * nr_frames_strobed * next_scene_hid_nodes_L1, pixel_width, CV_32FC1);
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
-    
-    cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
+    cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
     const int policy_net_hid_layers = 3;
     const int policy_net_hid_nodes_L1 = 200;
     const int policy_net_hid_nodes_L2 = 50;
     const int policy_net_hid_nodes_L3 = 10;
-    const int policy_net_out_nodes = nr_of_actions; // 
+    const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
 
-//---------- next scene fc net layer setup --------    
+    //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
     {
         next_scene_fc_net.input_layer.push_back(0.0);
@@ -166,7 +162,7 @@ int main()
     next_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L2);
     next_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L3);
 
-//-------- policy net layer setup -----
+    //-------- policy net layer setup -----
     for (int i = 0; i < policy_net_inp_nodes; i++)
     {
         policy_fc_net.input_layer.push_back(0.0);
@@ -195,7 +191,7 @@ int main()
     rand_act_data_item.episode_index_of_rand_act = 0;
     vector<random_action_data_struct> rand_action_list;
     rand_action_list.clear();
-    for(int i=0;i<10;i++)
+    for (int i = 0; i < 10; i++)
     {
         rand_action_list.push_back(rand_act_data_item);
     }
@@ -222,7 +218,7 @@ int main()
     {
         epsilon = warm_up_epsilon;
     }
-     cout << "Do you want to set a manual set epsilon value from start = Y/N " << endl;
+    cout << "Do you want to set a manual set epsilon value from start = Y/N " << endl;
     cin >> answer;
     if (answer == 'Y' || answer == 'y')
     {
@@ -251,9 +247,8 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
 
-
     vector<vector<replay_data_struct>> replay_buffer;
-    for(int i=0;i<g_replay_size;i++)
+    for (int i = 0; i < g_replay_size; i++)
     {
         replay_buffer.push_back(replay_1_episode_data_buffer);
     }
@@ -261,7 +256,6 @@ int main()
     cout << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
 
     //==== Hyper parameter settings End ===========================
-
 
     cout << "Do you want to load kernel weights from saved weight file = Y/N " << endl;
     cin >> answer;
@@ -284,7 +278,6 @@ int main()
     resize(game_video_full_size, resized_grapics, image_size_reduced);
     imshow("resized_grapics", resized_grapics); ///  resize(src, dst, size);
 
-
     const int max_nr_epochs = 1000000;
     for (int epoch = 0; epoch < max_nr_epochs; epoch++)
     {
@@ -293,7 +286,7 @@ int main()
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
             gameObj1.start_episode();
-            gameObj1.move_up = do_dice_action(nr_of_actions);            
+            gameObj1.move_up = do_dice_action(nr_of_actions);
             for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
             {
                 gameObj1.frame = frame_g;
@@ -301,34 +294,47 @@ int main()
                 game_video_full_size = gameObj1.gameGrapics.clone();
                 resize(game_video_full_size, resized_grapics, image_size_reduced);
                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
-                for(int row=0;row<pixel_height;row++)
+                for (int row = 0; row < pixel_height; row++)
                 {
-                    for(int col=0;col<pixel_width;col++)
+                    for (int col = 0; col < pixel_width; col++)
                     {
-                        replay_buffer[g_replay_cnt][frame_g].video_frame[row*pixel_width + col] = resized_grapics.at<float>(row, col);
+                        replay_buffer[g_replay_cnt][frame_g].video_frame[row * pixel_width + col] = resized_grapics.at<float>(row, col);
                     }
                 }
-                
-
 
                 if (frame_g > nr_frames_strobed - 1) // Wait until all 4 images is up there in the game after start
                 {
                     int inp_n_idx = 0;
-                    for(int f=0;f<nr_frames_strobed;f++)
+                    for (int f = 0; f < nr_frames_strobed; f++)
                     {
-                        for(int pix_idx=0;pix_idx<(pixel_width*pixel_height);pix_idx++)
+                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                         {
-                           float pixel_d = replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                           next_scene_fc_net.input_layer[inp_n_idx] = (double) pixel_d;
-                           inp_n_idx++;
+                            float pixel_d = replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                            next_scene_fc_net.input_layer[inp_n_idx] = (double)pixel_d;
+                            inp_n_idx++;
                         }
                     }
-                    double action_one_hot = 0.0;
-                    for(int act=0;act<nr_of_actions;act++)
+                    for (int act = 0; act < nr_of_actions; act++)
                     {
-                        //TODO store all action predicced next frame
-                  //      next_scene_fc_net.input_layer[inp_n_idx] = action_one_hot;
-                  //      inp_n_idx++;
+                        //Loop thorugh all possible actont and try to predict next scene on each taken action.
+                        for (int i = 0; i < nr_of_actions; i++)
+                        {
+                            double one_hot_encode_action_input_node = 0.0;
+                            if(i==act)
+                            {
+                                one_hot_encode_action_input_node = 1.0;
+                            }
+                            else
+                            {
+                                one_hot_encode_action_input_node = 0.0;
+                            }
+                            next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node;//One hot encoding 
+                        }
+                        next_scene_fc_net.forward_pass();//Do one prediction of next video frame how it will looks on one singel spefific action taken. 
+                        //Store all predictied next video frame for each diffrent action.
+
+                        //TODO
+                        //   mat_next_scene_all_actions.at<float> 
                     }
                 }
                 else
@@ -336,8 +342,7 @@ int main()
                     gameObj1.move_up = do_dice_action(nr_of_actions);
                 }
             }
-       }
-
+        }
 
         // Save all weights
         if (save_cnt < save_after_nr)
