@@ -370,10 +370,6 @@ int main()
                 if (frame_g > nr_frames_strobed - 1) // Wait until all 4 images is up there in the game after start
                 {
                    
-                    if(frame_g < gameObj1.nr_of_frames - 1)
-                    {
-                        term_state = NORMAL_STATE;
-                    }
                     if(frame_g == gameObj1.nr_of_frames - 1)
                     {
                         term_state = NOW_TERMINAL_STATE;
@@ -381,6 +377,10 @@ int main()
                     if(frame_g == gameObj1.nr_of_frames - 2)
                     {
                         term_state = ONE_STEP_BEFORE_TERMINAL_STATE;
+                    }
+                    if(frame_g < gameObj1.nr_of_frames - 2)
+                    {
+                        term_state = NORMAL_STATE;
                     }
 
                     int inp_n_idx = 0;
@@ -402,9 +402,26 @@ int main()
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
                                     double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-
-                                    next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                    policy_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    if(skip_scene_predicotr_only_for_benchmarking == 0)
+                                    {
+                                        //use the prediction network stadegy
+                                        next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                        int fisrt_frame_size = pixel_width * pixel_height;
+                                        if (pix_idx > fisrt_frame_size)
+                                        {
+                                            // let say we have 4 frame strobes f0,f1,f2,f3 and then next prediced pred_f4_next
+                                            // we will skip instert f0 to policy net f0 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f0,f1,f2,f3
+                                            // policy_fc_net.input_layer instead use f1,f2,f3 inserted here and pred_f4_next will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            policy_fc_net.input_layer[inp_n_idx - fisrt_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //Bench mark methode
+                                        //Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
+                                        policy_fc_net.input_layer[inp_n_idx] = pixel_d;//Here we load f0,f1,f2,f3 instead of loading f1,f2,f3, pred_f4_next 
+                                    }
                                     inp_n_idx++;
                                 }
                             }
@@ -413,31 +430,34 @@ int main()
                             int which_next_frame_have_stongest_action = 0;
                             for (int act = 0; act < nr_of_actions; act++)
                             {
-                                // Loop thorugh all possible actont and try to predict next scene on each taken action.
-                                for (int i = 0; i < nr_of_actions; i++)
+                                if (skip_scene_predicotr_only_for_benchmarking == 0)// use the prediction network stadegy
                                 {
-                                    double one_hot_encode_action_input_node = 0.0;
-                                    if (i == act)
+                                    // Loop thorugh all possible actont and try to predict next scene on each taken action.
+                                    for (int i = 0; i < nr_of_actions; i++)
                                     {
-                                        one_hot_encode_action_input_node = 1.0;
+                                        double one_hot_encode_action_input_node = 0.0;
+                                        if (i == act)
+                                        {
+                                            one_hot_encode_action_input_node = 1.0;
+                                        }
+                                        else
+                                        {
+                                            one_hot_encode_action_input_node = 0.0;
+                                        }
+                                        next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
                                     }
-                                    else
-                                    {
-                                        one_hot_encode_action_input_node = 0.0;
-                                    }
-                                    next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
-                                }
-                                next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one singel spefific action taken.
+                                    next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one singel spefific action taken.
 
-                                // Store all predictied next video frame for each diffrent action.
-                                for (int row = 0; row < pixel_height; row++)
-                                {
-                                    for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
+                                    // Store all predictied next video frame for each diffrent action.
+                                    for (int row = 0; row < pixel_height; row++)
                                     {
-                                        // Store all predictied next video frame for each diffrent action.
-                                        double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
-                                        mat_next_scene_all_actions.at<float>(row + act * pixel_width, col) = next_sc_pix;
-                                        policy_fc_net.input_layer[row * pixel_width + col] = next_sc_pix;
+                                        for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
+                                        {
+                                            // Store all predictied next video frame for each diffrent action.
+                                            double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
+                                            mat_next_scene_all_actions.at<float>(row + act * pixel_height, col) = next_sc_pix;
+                                            policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
+                                        }
                                     }
                                 }
 
@@ -448,7 +468,7 @@ int main()
                                 for (int i = 0; i < nr_of_actions; i++)
                                 {
                                     double action_policy_net_output = policy_fc_net.output_layer[i];
-                                    if (term_state == NORMAL_STATE)
+                                    if (term_state == NORMAL_STATE || skip_scene_predicotr_only_for_benchmarking == 1)//If we use bench mark mode we skip ONE_STEP_BEFORE_TERMINAL_STATE section it's not there in benchmark mode
                                     {
                                         if (action_policy_net_output > strongest_action_value)
                                         {
