@@ -47,6 +47,7 @@ public:
     float hid2out_learning_rate;
     float max_rewards;
     int enabel_3_state;///1= then enable 3 actions UP, DOWN, STOP
+    int use_only_3_ball_angle_game;//
     int advanced_game;///0= only a ball. 1= ball give awards. square gives punish
 
     bool use_unfair_dice;
@@ -342,6 +343,8 @@ void pinball_game::start_episode(void)
 
 
 //Tree state ball 
+if(use_only_3_ball_angle_game == 1)
+{
     float rand_a = (float) (rand() % 65535) / 65536;///Set ball shoot angle. Random value 0..1.0 range
     if (rand_a < 1.0 / 3.0)
     {
@@ -358,7 +361,7 @@ void pinball_game::start_episode(void)
              ball_angle_derivate = 1.0;
         }
     }
-
+}
     frame_steps=0;
     ball_offset_y = game_Height/2;///
     pad_position = game_Height/2;///Start the game at center

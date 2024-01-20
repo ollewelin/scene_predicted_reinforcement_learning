@@ -134,6 +134,7 @@ int main()
     gameObj1.enable_ball_swan = 0;
     gameObj1.use_character = 0;
     gameObj1.enabel_3_state = 1; // Input Action from Agent. move_up: 1= Move up pad. 0= Move down pad. 2= STOP used only when enabel_3_state = 1
+    gameObj1.use_only_3_ball_angle_game = 0;
 
     // Set up a OpenCV mat
     Size image_size_reduced(pixel_height, pixel_width); // the dst image size,e.g.50x50
@@ -299,7 +300,7 @@ int main()
 
     cout << " epsilon = " << epsilon << endl;
     double gamma = 0.85f;
-    const int g_replay_size = 1000; // Should be 10000 or more
+    const int g_replay_size = 100; // Should be 10000 or more
     const int save_after_nr = 1;
     // statistics report
     const int max_w_p_nr = 1000;
@@ -357,6 +358,7 @@ int main()
                 game_video_full_size = gameObj1.gameGrapics.clone();
                 resize(game_video_full_size, resized_grapics, image_size_reduced);
                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
+                waitKey(1);
                 for (int row = 0; row < pixel_height; row++)
                 {
                     for (int col = 0; col < pixel_width; col++)
@@ -382,96 +384,172 @@ int main()
                     }
 
                     int inp_n_idx = 0;
-                    if(term_state == NORMAL_STATE)
+                    if(term_state != NOW_TERMINAL_STATE)
                     {
-                        //
-                        for (int f = 0; f < nr_frames_strobed; f++)
+                        float exploring_dice = (float)(rand() % 65535) / 65536; // Through a fair dice. Random value 0..1.0 range
+                        if (exploring_dice < epsilon)
                         {
-                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                            {
-                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                               
-                                next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                policy_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                inp_n_idx++;
-                            }
-                        }
-                        double strongest_action_value = -DBL_MAX;
-                        int which_next_frame_have_stongest_action = 0;
-                        for (int act = 0; act < nr_of_actions; act++)
-                        {
-                            // Loop thorugh all possible actont and try to predict next scene on each taken action.
-                            for (int i = 0; i < nr_of_actions; i++)
-                            {
-                                double one_hot_encode_action_input_node = 0.0;
-                                if (i == act)
-                                {
-                                    one_hot_encode_action_input_node = 1.0;
-                                }
-                                else
-                                {
-                                    one_hot_encode_action_input_node = 0.0;
-                                }
-                                next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
-                            }
-                            next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one singel spefific action taken.
-
-                            // Store all predictied next video frame for each diffrent action.
-                            for (int row = 0; row < pixel_height; row++)
-                            {
-                                for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
-                                {
-                                    // Store all predictied next video frame for each diffrent action.
-                                    double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
-                                    mat_next_scene_all_actions.at<float>(row + act * pixel_width, col) = next_sc_pix;
-                                    policy_fc_net.input_layer[row * pixel_width + col] = next_sc_pix;
-                                }
-                            }
-
-                            // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action 
-                            policy_fc_net.forward_pass();
-                            //int what_act_was_stongest_i_debug = 0;
-                            //double debug_v = 0;
-                            for (int i = 0; i < nr_of_actions; i++)
-                            {
-                                double action_policy_net_output = policy_fc_net.output_layer[i];
-                                if(action_policy_net_output > strongest_action_value)
-                                {
-                                    strongest_action_value = action_policy_net_output;//Store the strongest policy value
-                                    which_next_frame_have_stongest_action = act;//Store what action prediced frame of the next predicted frame have the strongest action value
-                                   // what_act_was_stongest_i_debug = i;
-                                   // debug_v = strongest_action_value;
-                                }
-                            }
-                            //cout << "which_next_frame_have_stongest_action = " << which_next_frame_have_stongest_action << " what_act_was_stongest_i_debug = " <<  what_act_was_stongest_i_debug << " debug_v = " << debug_v << endl;
-                            //Show next frame prediction 
-                            imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
-                            waitKey(1);
-
+                            // Choose dice action (Exploration mode)
                             gameObj1.move_up = do_dice_action(nr_of_actions);
-
-                        }
-                    }
-                    else
-                    {
-                        // Terminal state or one frame before terminal state
-                        if(term_state == ONE_STEP_BEFORE_TERMINAL_STATE)
-                        {
-                            //One frame before the terminal state
-                            
+                            replay_buffer[g_replay_cnt][frame_g].dice_used = 1;
                         }
                         else
                         {
-                            //Ternimal state
+                            // Choose predicted action (Exploit mode)
+                            //
+                            for (int f = 0; f < nr_frames_strobed; f++)
+                            {
+                                for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                {
+                                    double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
 
+                                    next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    policy_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    inp_n_idx++;
+                                }
+                            }
+                            double strongest_action_value = -DBL_MAX;
+                            double sum_up_all_action_value_at_term_state = 0;
+                            int which_next_frame_have_stongest_action = 0;
+                            for (int act = 0; act < nr_of_actions; act++)
+                            {
+                                // Loop thorugh all possible actont and try to predict next scene on each taken action.
+                                for (int i = 0; i < nr_of_actions; i++)
+                                {
+                                    double one_hot_encode_action_input_node = 0.0;
+                                    if (i == act)
+                                    {
+                                        one_hot_encode_action_input_node = 1.0;
+                                    }
+                                    else
+                                    {
+                                        one_hot_encode_action_input_node = 0.0;
+                                    }
+                                    next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                                }
+                                next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one singel spefific action taken.
+
+                                // Store all predictied next video frame for each diffrent action.
+                                for (int row = 0; row < pixel_height; row++)
+                                {
+                                    for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
+                                    {
+                                        // Store all predictied next video frame for each diffrent action.
+                                        double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
+                                        mat_next_scene_all_actions.at<float>(row + act * pixel_width, col) = next_sc_pix;
+                                        policy_fc_net.input_layer[row * pixel_width + col] = next_sc_pix;
+                                    }
+                                }
+
+                                // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action
+                                policy_fc_net.forward_pass();
+                                // int what_act_was_stongest_i_debug = 0;
+                                // double debug_v = 0;
+                                for (int i = 0; i < nr_of_actions; i++)
+                                {
+                                    double action_policy_net_output = policy_fc_net.output_layer[i];
+                                    if (term_state == NORMAL_STATE)
+                                    {
+                                        if (action_policy_net_output > strongest_action_value)
+                                        {
+                                            strongest_action_value = action_policy_net_output; // Store the strongest policy value
+                                            which_next_frame_have_stongest_action = act;       // Store what action prediced frame of the next predicted frame have the strongest action value
+                                            // what_act_was_stongest_i_debug = i;
+                                            // debug_v = strongest_action_value;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // ONE_STEP_BEFORE_TERMINAL_STATE
+                                        if (i == 0)
+                                        {
+                                            sum_up_all_action_value_at_term_state = 0;
+                                        }
+                                        // At the predicted terminal state use summed action value instead of the max next action value
+                                        // because in the terminal state action don't matters for the reward (no more action is possible to take at terminal)
+                                        // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
+                                        // therefor a sum up of all action is a convinient way to use the policy network i think
+                                        sum_up_all_action_value_at_term_state += action_policy_net_output;
+                                        if (i == nr_of_actions - 1)
+                                        {
+                                            // Check agianst the other next predicted frame summed action values
+                                            if (sum_up_all_action_value_at_term_state > strongest_action_value)
+                                            {
+                                                which_next_frame_have_stongest_action = act;
+                                            }
+                                        }
+                                    }
+                                }
+                                // cout << "which_next_frame_have_stongest_action = " << which_next_frame_have_stongest_action << " what_act_was_stongest_i_debug = " <<  what_act_was_stongest_i_debug << " debug_v = " << debug_v << endl;
+                                // Show next frame prediction
+                                imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
+                                waitKey(1);
+                                gameObj1.move_up = which_next_frame_have_stongest_action;
+                                replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
+                            }
+                            
                         }
+                        replay_buffer[g_replay_cnt][frame_g].rewards_Q = 0.0;
+
+                    }
+                    else
+                    {
+                        //Ternimal state
+                        //Get the terminal rewards
+
+                        //double abs_diff = abs(gameObj1.pad_ball_diff);
+                        // cout << "pad_ball_diff = " << abs_diff << endl;
+                        //if (abs_diff < 1.0)
+                        //{
+                        //    abs_diff = 1.0;
+                        //}
+
+                        double rewards = 0.0;
+                        if (gameObj1.win_this_game == 1)
+                        {
+                            if (gameObj1.square == 1)
+                            {
+
+                                rewards = reward_gain * 1.0; // Win Rewards avoid square
+                                                             //       rewards /= abs_diff;
+                            }
+                            else
+                            {
+                                rewards = reward_gain * 1.0; // Win Rewards catch ball
+                                                             //       rewards /= abs_diff;
+                            }
+                            win_counter++;
+                        }
+                        else
+                        {
+                            if (gameObj1.square == 1)
+                            {
+                                //  rewards = -2.35; // Lose Penalty
+                                rewards = reward_gain * (-1.0);
+                                // rewards /= abs_diff;
+                            }
+                            else
+                            {
+                                // rewards = -3.95; // Lose Penalty
+                                rewards = reward_gain * (-1.0);
+                                // rewards *= abs_diff;
+                            }
+                        }
+                        replay_buffer[g_replay_cnt][frame_g].rewards_Q = rewards;
+                        cout << "                                                                                                       " << endl;
+                        std::cout << "\033[F";
+                        cout << "Play g_replay_cnt = " << g_replay_cnt << " Rewards = " << rewards << endl;
+                        // Move the cursor up one line (ANSI escape code)
+                        std::cout << "\033[F";
                     }
                 }
                 else
                 {
                     //Before the first frame in series filled up
                     gameObj1.move_up = do_dice_action(nr_of_actions);
+                    replay_buffer[g_replay_cnt][frame_g].dice_used = 1;
                 }
+                replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
         }
 
