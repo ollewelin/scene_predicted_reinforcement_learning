@@ -37,7 +37,32 @@ int do_dice_action(int number_of_actions)
     return decided_action;
 }
 
+
+
 vector<int> fisher_yates_shuffle(vector<int> table);
+
+/*
+// predict_next_frame pred_next_frame;
+// call example
+//pred_next_frame.make_and_store_predicted_frames(mat_next_scene_all_actions, next_scene_fc_net, pixel_height, pixel_width, act);
+
+class predict_next_frame
+{
+    public:
+    void make_and_store_predicted_frames(Mat& mat_next_scene_all_actions, fc_m_resnet& next_scene_fc_net, int pixel_height, int pixel_width, int action)
+    {
+        // Store all predictied next video frame for each diffrent action.
+        for (int row = 0; row < pixel_height; row++)
+        {
+            for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
+            {
+                // Store all predictied next video frame for each diffrent action.
+                mat_next_scene_all_actions.at<float>(row + action * pixel_width, col) = next_scene_fc_net.output_layer[row * pixel_width + col];
+            }
+        }
+    }
+};
+*/
 
 int main()
 {
@@ -277,7 +302,6 @@ int main()
     game_video_full_size = gameObj1.gameGrapics.clone();
     resize(game_video_full_size, resized_grapics, image_size_reduced);
     imshow("resized_grapics", resized_grapics); ///  resize(src, dst, size);
-
     const int max_nr_epochs = 1000000;
     for (int epoch = 0; epoch < max_nr_epochs; epoch++)
     {
@@ -331,10 +355,16 @@ int main()
                             next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node;//One hot encoding 
                         }
                         next_scene_fc_net.forward_pass();//Do one prediction of next video frame how it will looks on one singel spefific action taken. 
+                        
                         //Store all predictied next video frame for each diffrent action.
-
-                        //TODO
-                        //   mat_next_scene_all_actions.at<float> 
+                        for (int row = 0; row < pixel_height; row++)
+                        {
+                            for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
+                            {
+                                //Store all predictied next video frame for each diffrent action.
+                                mat_next_scene_all_actions.at<float>(row + act * pixel_width, col) = next_scene_fc_net.output_layer[row * pixel_width + col];
+                            }
+                        }
                     }
                 }
                 else
