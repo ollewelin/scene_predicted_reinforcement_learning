@@ -113,7 +113,7 @@ int main()
     int skip_scene_predicotr_only_for_benchmarking = 0; // set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
     char answer;
     srand(static_cast<unsigned>(time(NULL))); // Seed the randomizer
-    cout << "Scene prdictable reinforcement learning game" << endl;
+    cout << "Scene predictor net and policy net. Dual net reinforcement learning game" << endl;
 
     cout << "On going coding TODO. Not finnish...... " << endl;
 
@@ -510,7 +510,6 @@ int main()
                             
                         }
                         replay_buffer[g_replay_cnt][frame_g].rewards_Q = 0.0;
-
                     }
                     else
                     {
