@@ -236,10 +236,10 @@ int main()
         policy_fc_net.output_layer.push_back(0.0);
         policy_fc_net.target_layer.push_back(0.0);
     }
-    policy_fc_net.set_nr_of_hidden_layers(next_scene_hid_layers);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L1);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L2);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_scene_hid_nodes_L3);
+    policy_fc_net.set_nr_of_hidden_layers(policy_net_hid_layers);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L1);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L2);
+    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L3);
 
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
@@ -572,7 +572,12 @@ int main()
                 replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
         }
-
+        cout << "******** Training network for Epoch number = " << epoch << " **********" << endl;
+        cout << " TODO... in code " << endl;
+        for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+        {
+            //TODO learning networks from replay buffer
+        }
         // Save all weights
         if (save_cnt < save_after_nr)
         {
