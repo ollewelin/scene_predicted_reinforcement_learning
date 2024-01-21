@@ -200,7 +200,7 @@ int main()
 
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
-    const int next_scene_hid_nodes_L2 = 75;
+    const int next_scene_hid_nodes_L2 = 200;
     const int next_scene_hid_nodes_L3 = 200;
     const int next_scene_out_nodes = pixel_height * pixel_width; //
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
@@ -278,7 +278,7 @@ int main()
     const double learning_rate_fc = 0.001;
     double learning_rate_end = learning_rate_fc;
     next_scene_fc_net.learning_rate = learning_rate_end;
-    next_scene_fc_net.momentum = 0.95; //
+    next_scene_fc_net.momentum = 0.1; //
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.85;
     double warm_up_epsilon = warm_up_epsilon_default;
@@ -313,9 +313,9 @@ int main()
 
     cout << " epsilon = " << epsilon << endl;
     double gamma = 0.85f;
-    const int g_replay_size = 10; // Should be 10000 or more
-    const int retrain_next_pred_net_times = 5;
-    const int save_after_nr = 100;
+    const int g_replay_size = 100; // Should be 10000 or more
+    const int retrain_next_pred_net_times = 1;
+    const int save_after_nr = 10;
     // statistics report
     const int max_w_p_nr = 1000;
     int win_p_cnt = 0;
@@ -641,6 +641,7 @@ int main()
                 // Randomize the order of random action to train on in the random list.
                 rand_indx_act_list = fisher_yates_shuffle(rand_indx_act_list); // Randomize the training order of the next scene net training
                 //
+                next_scene_fc_net.loss_A = 0.0;
 
                 for(int train_cnt=0;train_cnt<size_of_rand_a_list;train_cnt++)
                 {
@@ -692,7 +693,9 @@ int main()
                         cout << endl;
                     }
                 }
-                
+                cout << endl;
+                cout << "scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
+                cout << endl;
             }
         }
         else

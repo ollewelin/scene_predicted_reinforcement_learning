@@ -395,7 +395,9 @@ void pinball_game::run_episode(void)
     int y_pad_constraints = 28;
     int pad_width = 35;
     int pad_height = 40;
-    int pad_speed = 8;//4
+    int pad_speed = 25;//4
+    //int pad_speed = 8;//4
+
 
 ///The frame loop is outside this class so The Agient cad do actions each frame step
 
