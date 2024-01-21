@@ -17,6 +17,7 @@ using namespace std;
 #include <float.h>
 
 #include "pinball_game.hpp"
+
 #define MOVE_DOWN 0
 #define MOVE_UP 1
 #define MOVE_STOP 2
@@ -27,6 +28,8 @@ using namespace std;
 const int pixel_height = 35;                        /// The input data pixel height, note game_Width = 220
 const int pixel_width = 35;                         /// The input data pixel width, note game_Height = 200
 const int nr_of_actions = 3;
+
+
 
 int do_dice_action(void)
 {
@@ -121,6 +124,7 @@ class get_frames_from_replay_buf
     }
 };
 */
+int show_image = 0;
 int main()
 {
     int term_state = NORMAL_STATE;//0 = N
@@ -312,7 +316,7 @@ int main()
     }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma = 0.85f;
+    double gamma_decay = 0.85f;
     const int g_replay_size = 100; // Should be 10000 or more
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 10;
@@ -366,14 +370,14 @@ int main()
         {
             gameObj1.start_episode();
             gameObj1.move_up = do_dice_action();
-            for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
+            for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) 
             {
+
                 gameObj1.frame = frame_g;
                 gameObj1.run_episode();
                 game_video_full_size = gameObj1.gameGrapics.clone();
                 resize(game_video_full_size, resized_grapics, image_size_reduced);
-                imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
-                waitKey(1);
+
                 for (int row = 0; row < pixel_height; row++)
                 {
                     for (int col = 0; col < pixel_width; col++)
@@ -401,6 +405,8 @@ int main()
                     int inp_n_idx = 0;
                     if(term_state != NOW_TERMINAL_STATE)
                     {
+
+
                         float exploring_dice = (float)(rand() % 65535) / 65536; // Through a fair dice. Random value 0..1.0 range
                         if (exploring_dice < epsilon)
                         {
@@ -509,12 +515,19 @@ int main()
                                     }
                                 }
                                 // cout << "which_next_frame_have_stongest_action = " << which_next_frame_have_stongest_action << " what_act_was_stongest_i_debug = " <<  what_act_was_stongest_i_debug << " debug_v = " << debug_v << endl;
-                                // Show next frame prediction
-                                imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
-                                waitKey(1);
                                 gameObj1.move_up = which_next_frame_have_stongest_action;
                                 replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
                             }
+
+                            // Show next frame prediction
+                            //if(frame_g < gameObj1.nr_of_frames - 10)
+                            {
+                                imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
+                                //waitKey(1);
+                                imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
+                                waitKey(1);
+                            }
+
                         }
                         replay_buffer[g_replay_cnt][frame_g].rewards_Q = 0.0;
                     }
@@ -568,6 +581,7 @@ int main()
                         // Move the cursor up one line (ANSI escape code)
                         std::cout << "\033[F";
                     }
+
                 }
                 else
                 {
@@ -610,7 +624,7 @@ int main()
         {
             for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
             {
-                for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
+                for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++)
                 {
                     if (replay_buffer[g_replay_cnt][frame_g].dice_used == 1)
                     {
@@ -632,12 +646,6 @@ int main()
             //Start Training next predictide net
             for (int retrain = 0; retrain < retrain_next_pred_net_times; retrain++)
             {
-                if(retrain > 0)
-                {
- //                   cout << endl;
- //                   cout << "Retrain next scene predicted network retrain = " << retrain << endl;
-                    
-                }
                 // Randomize the order of random action to train on in the random list.
                 rand_indx_act_list = fisher_yates_shuffle(rand_indx_act_list); // Randomize the training order of the next scene net training
                 //
@@ -653,7 +661,7 @@ int main()
 
                     cout << "                                                                                                       " << endl;
                     std::cout << "\033[F";
-                    cout << " next prediction net train_cnt = " << train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << " retrain = " << retrain  << endl;
+                    cout << " next prediction net train count down = " << size_of_rand_a_list - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << " retrain = " << retrain  << endl;
                     std::cout << "\033[F";
 
                     if(frame_g < gameObj1.nr_of_frames - 1)
@@ -710,10 +718,27 @@ int main()
         cout << "********************************************" << endl;
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
-            //TODO learning networks from replay buffer
-
+            //First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
+            for (int frame_g = gameObj1.nr_of_frames-1; frame_g > 0; frame_g--) // Loop from end state backwards to recalculate rewards with decay backwards
+            {
+               replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q = replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q + replay_buffer[g_replay_cnt][frame_g].rewards_Q * gamma_decay;
+            }
         }
 
+        // Learning policy networks from replay buffer
+        for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+        {
+            //  cout << endl;
+            //  cout << endl;
+            //  cout << "***************"<< endl;
+            for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++)
+            {
+                //cout << " Rewards values replay_buffer[" << g_replay_cnt << "][" << frame_g << "].rewards_Q = " << replay_buffer[g_replay_cnt][frame_g].rewards_Q << endl;
+                //Learning policy networks from replay buffer
+
+            }
+            
+        }
 
         // Save all weights
         if (save_cnt < save_after_nr)
@@ -724,6 +749,7 @@ int main()
         {
             save_cnt = 0;
             next_scene_fc_net.save_weights(next_scene_net_filename);
+            policy_fc_net.save_weights(policy_fc_net_filename);
         }
         // End
     }
