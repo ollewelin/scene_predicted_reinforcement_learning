@@ -245,18 +245,17 @@ int main()
 
     typedef struct
     {
-        int frame_index_of_rand_act;
-        int episode_index_of_rand_act;
+        //This two int below pointing to replay action how was taken from random "dice" action. This is used to train next frame predictor excusivly on ranodm action to prevent next scene net to learn any policy
+        int frame_index_of_rand_act;//Say what index of dice action used on one single reply episode 
+        int episode_index_of_rand_act;//Say what single reply episode the frame_index_of_rand_act above correspond to
     } random_action_data_struct;
     random_action_data_struct rand_act_data_item;
     rand_act_data_item.frame_index_of_rand_act = 0;
     rand_act_data_item.episode_index_of_rand_act = 0;
     vector<random_action_data_struct> rand_action_list;
+    vector<int> rand_indx_act_list;
+    rand_indx_act_list.clear();
     rand_action_list.clear();
-    for (int i = 0; i < 10; i++)
-    {
-        rand_action_list.push_back(rand_act_data_item);
-    }
 
     //============ Neural Network Size setup is finnish ! ==================
 
@@ -300,7 +299,7 @@ int main()
 
     cout << " epsilon = " << epsilon << endl;
     double gamma = 0.85f;
-    const int g_replay_size = 100; // Should be 10000 or more
+    const int g_replay_size = 10; // Should be 10000 or more
     const int save_after_nr = 1;
     // statistics report
     const int max_w_p_nr = 1000;
@@ -347,6 +346,7 @@ int main()
     {
         cout << "******** Epoch number = " << epoch << " **********" << endl;
         cout << "epsilon = " << epsilon << endl;
+        int rand_act_counter = 0;//Count how many dice random action was taken this episode used later during training next scene net
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
             gameObj1.start_episode();
@@ -392,6 +392,7 @@ int main()
                             // Choose dice action (Exploration mode)
                             gameObj1.move_up = do_dice_action(nr_of_actions);
                             replay_buffer[g_replay_cnt][frame_g].dice_used = 1;
+                            rand_act_counter++;
                         }
                         else
                         {
@@ -507,7 +508,6 @@ int main()
                                 gameObj1.move_up = which_next_frame_have_stongest_action;
                                 replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
                             }
-                            
                         }
                         replay_buffer[g_replay_cnt][frame_g].rewards_Q = 0.0;
                     }
@@ -567,16 +567,69 @@ int main()
                     //Before the first frame in series filled up
                     gameObj1.move_up = do_dice_action(nr_of_actions);
                     replay_buffer[g_replay_cnt][frame_g].dice_used = 1;
+                    rand_act_counter++;
                 }
                 replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
         }
-        cout << "******** Training network for Epoch number = " << epoch << " **********" << endl;
-        cout << " TODO... in code " << endl;
+        cout << "**********************************************************************************************************************************************" << endl;
+        cout << "******** Training first of all the next scene predictiable network exclusive on random dice actions on replay from Epoch number = " << epoch << " **********" << endl;
+        cout << "**********************************************************************************************************************************************" << endl;
+       
+
+        cout << "rand_act_counter = " << rand_act_counter << endl;
+        //Training next scene networks from replay buffer only from dice action
+        rand_action_list.clear();
+        rand_indx_act_list.clear();
+
+        for (int i = 0;i<rand_act_counter;i++)
+        {
+            rand_action_list.push_back(rand_act_data_item);
+            rand_indx_act_list.push_back(0);
+        }
+
+        int r_list_index = 0;
+        int size_of_rand_a_list = rand_action_list.size();
+        //cout << "size_of_rand_a_list = " << size_of_rand_a_list << endl;
+        if (rand_act_counter > 0)
+        {
+            for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+            {
+                for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++) // Loop throue each of the 100 frames
+                {
+                    if (replay_buffer[g_replay_cnt][frame_g].dice_used == 1)
+                    {
+                        if (r_list_index > size_of_rand_a_list - 1) // Check size...
+                        {
+                            cout << "! Error r_list_index > size_of_rand_a_list - 1  r_list_index = " << r_list_index << " size_of_rand_a_list - 1 = " << size_of_rand_a_list - 1 << endl;
+                            cout << " EXIT this program now !" << endl;
+                            exit(0);
+                        }
+                        rand_action_list[r_list_index].frame_index_of_rand_act = frame_g;        // write index of what frame the random action was taken
+                        rand_action_list[r_list_index].episode_index_of_rand_act = g_replay_cnt; // write index of what replat episode the random action was taken
+                        rand_indx_act_list[r_list_index] = r_list_index;                         // Just do a stright list start from 0,1,2.... and so on later shuffel this list by the fisher_yates_shuffle to randomize the training order later
+                        r_list_index++;                                                          // increas the list index to the end
+                    }
+                }
+            }
+            // Randomize the order of random action to train on in the random list.
+            rand_indx_act_list = fisher_yates_shuffle(rand_indx_act_list); // Randomize the training order of the next scene net training
+        }
+        else
+        {
+            cout << " No Training of next scene predictiable net was made because no random action was taken rand_act_counter = " << rand_act_counter << endl;
+        }
+
+        cout << "********************************************" << endl;
+        cout << "******** Training policy network ***********" << endl;
+        cout << "********************************************" << endl;
         for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
         {
             //TODO learning networks from replay buffer
+
         }
+
+
         // Save all weights
         if (save_cnt < save_after_nr)
         {
