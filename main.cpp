@@ -274,10 +274,11 @@ int main()
 
     //=== Now setup the hyper parameters of the Neural Network ====
     double reward_gain = 10.0;
-    const double learning_rate_fc = 0.001;
-    double learning_rate_end = learning_rate_fc;
-    next_scene_fc_net.learning_rate = learning_rate_end;
+    next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
+    policy_fc_net.learning_rate = 0.0001;
+    policy_fc_net.momentum = 0.01; //
+
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.85;
     double warm_up_epsilon = warm_up_epsilon_default;
@@ -737,7 +738,7 @@ int main()
                         inp_n_idx++;
                     }
                 }
-
+                policy_fc_net.forward_pass();
                 for (int i = 0; i < nr_of_actions; i++)
                 {
                     // We are in terminal state no action could be taken in terminal state so all wil have the rewards as target value
