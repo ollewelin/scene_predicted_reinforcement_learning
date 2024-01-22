@@ -329,7 +329,8 @@ int main()
     }
 
     vector<int> train_policy_net_rand_list;
-    const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
+   // const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
+    const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed ;
     const int number_of_policy_train_tot = g_replay_size * number_of_policy_train_frm;
     for (int i = 0; i < number_of_policy_train_tot; i++)
     {
@@ -428,8 +429,8 @@ int main()
                                     {
                                         // use the prediction network stadegy
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                        int first_frame_size = pixel_width * pixel_height; // Bugg code here TODO fix and change this
-                                        if (pix_idx > first_frame_size)                    // Bugg code here TODO fix and change this
+                                        int first_frame_size = pixel_width * pixel_height; 
+                                        if (pix_idx > first_frame_size)                    
                                         {
                                             // let say we have 4 frame strobes f0,f1,f2,f3 and then next prediced pred_f4_next
                                             // we will skip instert f0 to policy net f0 only used for next_scene_fc_net.input_layer
@@ -614,9 +615,10 @@ int main()
             int train_nr = train_policy_net_rand_list[train_cnt];
             int g_replay_cnt = train_nr / number_of_policy_train_frm;
             int frame_g = train_nr % number_of_policy_train_frm;
-            frame_g = frame_g + nr_frames_strobed - 1; // Step forward where so the first frames at beginning also could be loaded to policy net
+        //    frame_g = frame_g + nr_frames_strobed - 1; // Step forward where so the first frames at beginning also could be loaded to policy net
+            frame_g = frame_g + nr_frames_strobed; // Step forward where so the first frames at beginning also could be loaded to policy net
             // frame_g number is now in range = 3..34 when game frames = 35 and nr_frame_strobe = 4
-            if (frame_g > nr_frames_strobed - 1) // Wait until all 4 images is up there in the game after start
+        //    if (frame_g > nr_frames_strobed - 1) // Wait until all 4 images is up there in the game after start
             {
 
                 if (frame_g == gameObj1.nr_of_frames - 1)
@@ -643,9 +645,7 @@ int main()
                     {
                         for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                         {
-                            // Bugg here seg fault
                             double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                            // double pixel_d = 0.0;
                             //  Load the prediction network with input frame video from replay memory
                             next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
                             inp_n_idx++;
@@ -669,8 +669,8 @@ int main()
                             if (skip_scene_predicotr_only_for_benchmarking == 0)
                             {
                                 // use the prediction network stadegy
-                                int first_frame_size = pixel_width * pixel_height; // Bugg code here TODO fix and change this
-                                if (pix_idx > first_frame_size)                    // Bugg code here TODO fix and change this
+                                int first_frame_size = pixel_width * pixel_height; 
+                                if (pix_idx > first_frame_size)                    
                                 {
                                     // let say we have 4 frame strobes f0,f1,f2,f3 and then next prediced pred_f4_next
                                     // we will skip instert f0 to policy net f0 only used for next_scene_fc_net.input_layer
