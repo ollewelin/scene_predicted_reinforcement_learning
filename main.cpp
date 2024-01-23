@@ -276,8 +276,8 @@ int main()
     double reward_gain = 10.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.001;
-    policy_fc_net.momentum = 0.1; //
+    policy_fc_net.learning_rate = 0.00025;
+    policy_fc_net.momentum = 0.025; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -287,7 +287,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.005;
+    const double derating_epsilon = 0.0001;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
