@@ -276,8 +276,8 @@ int main()
     double reward_gain = 10.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.00025;
-    policy_fc_net.momentum = 0.025; //
+    policy_fc_net.learning_rate = 0.0005;
+    policy_fc_net.momentum = 0.05; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
