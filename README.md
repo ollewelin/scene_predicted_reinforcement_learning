@@ -14,4 +14,3 @@ So instead policy will search best of 3 action. This approch of dual network wil
 
 ![](example1.png)
 
-Scene predicted reinforcement learning with dual network
