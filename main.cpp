@@ -276,16 +276,16 @@ int main()
     double reward_gain = 10.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.0001;
-    policy_fc_net.momentum = 0.01; //
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.1; //
 
     double init_random_weight_propotion = 0.25;
-    const double warm_up_epsilon_default = 0.85;
+    const double warm_up_epsilon_default = 0.95;
     double warm_up_epsilon = warm_up_epsilon_default;
-    const double warm_up_eps_derating = 0.15;
+    const double warm_up_eps_derating = 0.02;
     int warm_up_eps_nr = 3;
     int warm_up_eps_cnt = 0;
-    const double start_epsilon = 0.50;
+    const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
     const double derating_epsilon = 0.005;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
@@ -599,7 +599,52 @@ int main()
                 }
                 replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
+
+            total_plays++;
+            // Calculate win probablilty
+            if (win_p_cnt > 10)
+            {
+                now_win_probability = (double)win_counter / (double)(win_p_cnt + 1);
+                if (g_replay_cnt == g_replay_size - 1)
+                {
+                    cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                }
+            }
+            else
+            {
+                now_win_probability = 0.5;
+            }
+            if (win_p_cnt < max_w_p_nr)
+            {
+                win_p_cnt++;
+            }
+            else
+            {
+                win_p_cnt = 0;
+                win_counter = 0;
+                // Store last 1000 win probablilty
+                last_win_probability = now_win_probability;
+            }
         }
+
+
+        if (epsilon > stop_min_epsilon)
+        {
+            if (warm_up_eps_cnt < warm_up_eps_nr)
+            {
+                epsilon -= warm_up_eps_derating;
+                if (epsilon < start_epsilon)
+                {
+                    epsilon = start_epsilon; // Limit warm up warm_up_eps_derating if go below the start_epsilon value during warm up epsilon
+                }
+                warm_up_eps_cnt++;
+            }
+            else
+            {
+                epsilon -= derating_epsilon;
+            }
+        }
+
 
         cout << endl;
         cout << "********************************************" << endl;
