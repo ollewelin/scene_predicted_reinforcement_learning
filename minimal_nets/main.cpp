@@ -264,7 +264,7 @@ int main()
 
     cout << " epsilon = " << epsilon << endl;
     double gamma_decay = 0.85f;
-    const int g_replay_size = 100; // Should be 10000 or more
+    const int g_replay_size = 1000; // Should be 10000 or more
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 20;
     // statistics report
