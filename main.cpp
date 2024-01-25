@@ -391,6 +391,9 @@ int main()
                             gameObj1.move_up = do_dice_action();
                             replay_buffer[g_replay_cnt][frame_g].dice_used = 1;
                             rand_act_counter++;
+                            imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
+                            waitKey(1);
+
                         }
                         else
                         {
