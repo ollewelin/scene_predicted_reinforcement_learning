@@ -393,7 +393,6 @@ int main()
                             rand_act_counter++;
                             imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
                             waitKey(1);
-
                         }
                         else
                         {
@@ -618,19 +617,20 @@ int main()
             }
         }
         cout << endl;
-        cout << "********************************************" << endl;
-        cout << "******** Training policy network ***********" << endl;
-        cout << "********************************************" << endl;
-        for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
-        {
-            // First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
-            for (int frame_g = gameObj1.nr_of_frames - 1; frame_g > 0; frame_g--) // Loop from end state backwards to recalculate rewards with decay backwards
-            {
-                replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q = replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q + replay_buffer[g_replay_cnt][frame_g].rewards_Q * gamma_decay;
-            }
-        }
         if (run_only_random_actions_for_next_scene == 0)
         {
+
+            cout << "********************************************" << endl;
+            cout << "******** Training policy network ***********" << endl;
+            cout << "********************************************" << endl;
+            for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+            {
+                // First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
+                for (int frame_g = gameObj1.nr_of_frames - 1; frame_g > 0; frame_g--) // Loop from end state backwards to recalculate rewards with decay backwards
+                {
+                    replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q = replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q + replay_buffer[g_replay_cnt][frame_g].rewards_Q * gamma_decay;
+                }
+            }
             // Learning policy networks from replay buffer
             train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
             policy_fc_net.loss_A = 0.0;
