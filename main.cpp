@@ -173,6 +173,7 @@ int main()
     const int m_p_hight_block = 5;//policy_net_hid_nodes_L1 must be a multiple of this value
     mat_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
 
+
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
     {
@@ -295,6 +296,7 @@ int main()
     // const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
     const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed;
     const int number_of_policy_train_tot = g_replay_size * number_of_policy_train_frm;
+    const int update_policy_view_after = number_of_policy_train_tot / 10;
     for (int i = 0; i < number_of_policy_train_tot; i++)
     {
         train_policy_net_rand_list.push_back(i);
@@ -660,8 +662,10 @@ int main()
             // Learning policy networks from replay buffer
             train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
             policy_fc_net.loss_A = 0.0;
+            int d_t_cnt = 0;
             for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
             {
+                
                 int train_nr = train_policy_net_rand_list[train_cnt];
                 int g_replay_cnt = train_nr / number_of_policy_train_frm;
                 int frame_g = train_nr % number_of_policy_train_frm;
@@ -791,6 +795,28 @@ int main()
                 // Now also target values are ready for policy netowork training
                 policy_fc_net.backpropagtion();      // Train
                 policy_fc_net.update_all_weights(1); // and update weights
+
+                if(d_t_cnt<update_policy_view_after)
+                {
+                    d_t_cnt++;
+                }
+                else
+                {
+                    d_t_cnt=0;
+                    //View mat_policy_net_first_layer_view
+                    //vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
+                    for(int L1_node_cnt=0;L1_node_cnt<policy_net_hid_nodes_L1;L1_node_cnt++)
+                    {
+                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                        {
+                            int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
+                            int col = pixel_width  * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                            mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
+                        }
+                    }
+                    imshow("mat_policy_net_first_layer_view", mat_policy_net_first_layer_view);
+                    waitKey(1);
+                }
             }
             cout << endl;
             cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
@@ -903,20 +929,6 @@ int main()
                     cout << endl;
                     cout << "scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
                     cout << endl;
-
-                    //View mat_policy_net_first_layer_view
-                    //vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
-                    for(int L1_node_cnt=0;L1_node_cnt<policy_net_hid_nodes_L1;L1_node_cnt++)
-                    {
-                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                        {
-                            int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
-                            int col = pixel_width  * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
-                            mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
-                        }
-                    }
-                    imshow("mat_policy_net_first_layer_view", mat_policy_net_first_layer_view);
-                    waitKey(1);
                 }
             }
             else
