@@ -225,13 +225,14 @@ int main()
 //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 100; // how meny episode on one epoch
+    const int g_replay_size = 500; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
-    double reward_gain = 1.0;
+    const double reward_gain = 1.0;
+    const double reward_offset = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.00001;
-    policy_fc_net.momentum = 0.01; //
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.1; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -241,7 +242,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.001 * g_replay_size/1000;
+    const double derating_epsilon = 0.01 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -540,12 +541,12 @@ int main()
                             if (gameObj1.square == 1)
                             {
 
-                                rewards = reward_gain * 1.0; // Win Rewards avoid square
+                                rewards = 1.0; // Win Rewards avoid square
                                                              //       rewards /= abs_diff;
                             }
                             else
                             {
-                                rewards = reward_gain * 1.0; // Win Rewards catch ball
+                                rewards = 1.0; // Win Rewards catch ball
                                                              //       rewards /= abs_diff;
                             }
                             win_counter++;
@@ -555,16 +556,17 @@ int main()
                             if (gameObj1.square == 1)
                             {
                                 //  rewards = -2.35; // Lose Penalty
-                                rewards = reward_gain * (-1.0);
+                                rewards = (-1.0);
                                 // rewards /= abs_diff;
                             }
                             else
                             {
                                 // rewards = -3.95; // Lose Penalty
-                                rewards = reward_gain * (-1.0);
+                                rewards = (-1.0);
                                 // rewards *= abs_diff;
                             }
                         }
+                        rewards = rewards * reward_gain + reward_offset;
                         replay_buffer[g_replay_cnt][frame_g].rewards_Q = rewards;
                         cout << "                                                                                                       " << endl;
                         std::cout << "\033[F";
@@ -748,7 +750,7 @@ int main()
                     {
                         if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i] + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
