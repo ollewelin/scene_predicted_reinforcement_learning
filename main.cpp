@@ -548,7 +548,10 @@ int main()
                                 rewards = reward_gain * 1.0; // Win Rewards catch ball
                                                              //       rewards /= abs_diff;
                             }
-                            win_counter++;
+                            if (run_only_random_actions_for_next_scene == 0)
+                            {
+                                win_counter++;
+                            }
                         }
                         else
                         {
