@@ -205,10 +205,10 @@ int main()
 
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
-//------------------------------------------------------------------------------
-//Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
-//Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
-//when run_only_random_actions_for_next_scene = 1
+    //------------------------------------------------------------------------------
+    // Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
+    // Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
+    // when run_only_random_actions_for_next_scene = 1
     typedef struct
     {
         // This two int below pointing to replay action how was taken from random "dice" action. This is used to train next frame predictor excusivly on ranodm action to prevent next scene net to learn any policy
@@ -222,17 +222,17 @@ int main()
     vector<int> rand_indx_act_list;
     rand_indx_act_list.clear();
     rand_action_list.clear();
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 500; // how meny episode on one epoch
+    const int g_replay_size = 100; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
     const double reward_offset = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.001;
-    policy_fc_net.momentum = 0.1; //
+    policy_fc_net.learning_rate = 0.00001;
+    policy_fc_net.momentum = 0.025; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -242,7 +242,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.01 * g_replay_size/1000;
+    const double derating_epsilon = 0.01 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -267,10 +267,10 @@ int main()
     }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma_decay = 0.85f;
-    
+    const double gamma_decay = 0.2;
+
     const int retrain_next_pred_net_times = 1;
-    const int save_after_nr = 5;
+    const int save_after_nr = 25;
     // statistics report
     const int max_w_p_nr = 1000;
     int win_p_cnt = 0;
@@ -278,8 +278,8 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
     int run_only_random_actions_for_next_scene = 0; // Toggle 1 or 0. 1 run only random action for training the next scene predictor net. 0 Run policy network with epsilon
-//rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
-//will be removed because now I compleatly separate next scene net training episode from policy training epoch
+                                                    // rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
+    // will be removed because now I compleatly separate next scene net training episode from policy training epoch
 
     vector<vector<replay_data_struct>> replay_buffer;
     for (int i = 0; i < g_replay_size; i++)
@@ -344,10 +344,10 @@ int main()
         else
         {
             run_only_random_actions_for_next_scene = 1; // Toggle
-            cout << "** Run 100% random action to load repaly memory with data for next scene net traning later **********" << endl;
-            if(epoch>0)
+            cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
+            if (epoch > 0)
             {
-                epoch--;//Don't count up epoch until we start policy instead
+                epoch--; // Don't count up epoch until we start policy instead
             }
         }
         cout << "******** Epoch number = " << epoch << " **********" << endl;
@@ -542,12 +542,12 @@ int main()
                             {
 
                                 rewards = 1.0; // Win Rewards avoid square
-                                                             //       rewards /= abs_diff;
+                                               //       rewards /= abs_diff;
                             }
                             else
                             {
                                 rewards = 1.0; // Win Rewards catch ball
-                                                             //       rewards /= abs_diff;
+                                               //       rewards /= abs_diff;
                             }
                             win_counter++;
                         }
@@ -585,31 +585,33 @@ int main()
                 }
                 replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
-
-            total_plays++;
-            // Calculate win probablilty
-            if (win_p_cnt > 10)
+            if (run_only_random_actions_for_next_scene == 0)
             {
-                now_win_probability = (double)win_counter / (double)(win_p_cnt + 1);
-                if (g_replay_cnt == g_replay_size - 1)
+                total_plays++;
+                // Calculate win probablilty
+                if (win_p_cnt > 10)
                 {
-                    cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                    now_win_probability = (double)win_counter / (double)(win_p_cnt + 1);
+                    if (g_replay_cnt == g_replay_size - 1)
+                    {
+                        cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                    }
                 }
-            }
-            else
-            {
-                now_win_probability = 0.5;
-            }
-            if (win_p_cnt < max_w_p_nr)
-            {
-                win_p_cnt++;
-            }
-            else
-            {
-                win_p_cnt = 0;
-                win_counter = 0;
-                // Store last 1000 win probablilty
-                last_win_probability = now_win_probability;
+                else
+                {
+                    now_win_probability = 0.5;
+                }
+                if (win_p_cnt < max_w_p_nr)
+                {
+                    win_p_cnt++;
+                }
+                else
+                {
+                    win_p_cnt = 0;
+                    win_counter = 0;
+                    // Store last 1000 win probablilty
+                    last_win_probability = now_win_probability;
+                }
             }
         }
         if (run_only_random_actions_for_next_scene == 0)
