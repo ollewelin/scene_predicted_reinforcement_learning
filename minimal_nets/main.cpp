@@ -231,7 +231,7 @@ int main()
 //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 100; // how meny episode on one epoch
+    const int g_replay_size = 1000; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
     double reward_gain = 1.0;
     next_scene_fc_net.learning_rate = 0.001;
@@ -239,13 +239,14 @@ int main()
     policy_fc_net.learning_rate = 0.001;
     policy_fc_net.momentum = 0.1; //
 
-    double init_random_weight_propotion = 0.25;
+    double init_random_next_pre_weight_propotion = 0.25;
+    double init_random_policy_net_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
     double warm_up_epsilon = warm_up_epsilon_default;
     const double warm_up_eps_derating = 0.02;
     int warm_up_eps_nr = 3;
     int warm_up_eps_cnt = 0;
-    const double start_epsilon = 0.85;
+    const double start_epsilon = 0.5;
     const double stop_min_epsilon = 0.05;
     const double derating_epsilon = 0.005 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
@@ -316,8 +317,7 @@ int main()
         cin >> answer;
         if (answer == 'Y' || answer == 'y')
         {
-            policy_fc_net.randomize_weights(init_random_weight_propotion);
-      //      policy_fc_net.randomize_weights(1.5);
+            policy_fc_net.randomize_weights(init_random_policy_net_weight_propotion);
         }
         else
         {
@@ -326,10 +326,8 @@ int main()
     }
     else
     {
-        next_scene_fc_net.randomize_weights(init_random_weight_propotion);
-        policy_fc_net.randomize_weights(init_random_weight_propotion);
-    //    policy_fc_net.randomize_weights(1.5);
-
+        next_scene_fc_net.randomize_weights(init_random_next_pre_weight_propotion);
+        policy_fc_net.randomize_weights(init_random_policy_net_weight_propotion);
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
