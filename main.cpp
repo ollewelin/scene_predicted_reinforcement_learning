@@ -148,9 +148,9 @@ int main()
     policy_fc_net.clip_deriv = 0;
 
     const int next_scene_hid_layers = 3;
-    const int next_scene_hid_nodes_L1 = 75;
-    const int next_scene_hid_nodes_L2 = 75;
-    const int next_scene_hid_nodes_L3 = 75;
+    const int next_scene_hid_nodes_L1 = 200;
+    const int next_scene_hid_nodes_L2 = 200;
+    const int next_scene_hid_nodes_L3 = 200;
     const int next_scene_out_nodes = pixel_height * pixel_width; //
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
@@ -163,8 +163,8 @@ int main()
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
     const int policy_net_hid_layers = 3;
-    const int policy_net_hid_nodes_L1 = 85;
-    const int policy_net_hid_nodes_L2 = 25;
+    const int policy_net_hid_nodes_L1 = 200;
+    const int policy_net_hid_nodes_L2 = 75;
     const int policy_net_hid_nodes_L3 = 10;
     const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
@@ -225,13 +225,13 @@ int main()
 //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 100; // how meny episode on one epoch
+    const int g_replay_size = 1000; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
     double reward_gain = 1.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.0001;
-    policy_fc_net.momentum = 0.25; //
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.1; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -241,7 +241,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.001 * g_replay_size/1000;
+    const double derating_epsilon = 0.01 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -748,7 +748,7 @@ int main()
                     {
                         if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i] + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
