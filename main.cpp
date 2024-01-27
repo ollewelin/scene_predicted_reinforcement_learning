@@ -241,7 +241,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.01 * g_replay_size/1000;
+    const double derating_epsilon = 0.001 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -343,7 +343,7 @@ int main()
         else
         {
             run_only_random_actions_for_next_scene = 1; // Toggle
-            cout << "** Run 100% random action to load repaly memory with data for next scene net traning later **********" << endl;
+            cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
             if(epoch>0)
             {
                 epoch--;//Don't count up epoch until we start policy instead
