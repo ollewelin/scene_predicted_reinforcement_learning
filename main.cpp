@@ -141,7 +141,7 @@ int main()
     policy_fc_net.block_type = 2;
     policy_fc_net.use_softmax = 0;
     policy_fc_net.activation_function_mode = 2;
-    policy_fc_net.force_last_activation_function_mode = 3;
+    policy_fc_net.force_last_activation_function_mode = 1;
     policy_fc_net.use_skip_connect_mode = 0;
     policy_fc_net.use_dropouts = 0;
     policy_fc_net.dropout_proportion = 0.0;
@@ -155,19 +155,24 @@ int main()
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_weights_next_sc, mat_input_strobe_frames, mat_next_scene_all_actions, mat_next_scene_one_action;
+    Mat mat_policy_net_first_layer_view;
     mat_input_weights_next_sc.create(pixel_height * nr_frames_strobed * next_scene_hid_nodes_L1, pixel_width, CV_32FC1);
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     mat_next_scene_one_action.create(pixel_height, pixel_width, CV_32FC1);
+    
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
     const int policy_net_hid_layers = 3;
-    const int policy_net_hid_nodes_L1 = 200;
-    const int policy_net_hid_nodes_L2 = 75;
+    const int policy_net_hid_nodes_L1 = 85;
+    const int policy_net_hid_nodes_L2 = 25;
     const int policy_net_hid_nodes_L3 = 10;
     const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
+    const int m_p_hight_block = 5;//policy_net_hid_nodes_L1 must be a multiple of this value
+    mat_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+
 
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
@@ -203,6 +208,7 @@ int main()
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L2);
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L3);
 
+
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
 //------------------------------------------------------------------------------
@@ -227,7 +233,8 @@ int main()
 
     const int g_replay_size = 1000; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
-    double reward_gain = 1.0;
+    const double reward_gain = 1.0;
+    const double policy_target_offset = 0.5;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
     policy_fc_net.learning_rate = 0.001;
@@ -241,7 +248,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.001 * g_replay_size/1000;
+    const double derating_epsilon = 0.005 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -266,7 +273,7 @@ int main()
     }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma_decay = 0.85f;
+    double gamma_decay = 0.55f;
     
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
@@ -290,6 +297,7 @@ int main()
     // const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
     const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed;
     const int number_of_policy_train_tot = g_replay_size * number_of_policy_train_frm;
+    const int update_policy_view_after = number_of_policy_train_tot / 10;
     for (int i = 0; i < number_of_policy_train_tot; i++)
     {
         train_policy_net_rand_list.push_back(i);
@@ -310,6 +318,7 @@ int main()
         if (answer == 'Y' || answer == 'y')
         {
             policy_fc_net.randomize_weights(init_random_weight_propotion);
+      //      policy_fc_net.randomize_weights(1.5);
         }
         else
         {
@@ -320,6 +329,8 @@ int main()
     {
         next_scene_fc_net.randomize_weights(init_random_weight_propotion);
         policy_fc_net.randomize_weights(init_random_weight_propotion);
+    //    policy_fc_net.randomize_weights(1.5);
+
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
@@ -617,7 +628,6 @@ int main()
         }
         if (run_only_random_actions_for_next_scene == 0)
         {
-
             if (epsilon > stop_min_epsilon)
             {
                 if (warm_up_eps_cnt < warm_up_eps_nr)
@@ -634,8 +644,6 @@ int main()
                     epsilon -= derating_epsilon;
                 }
             }
-
-
         }
         cout << endl;
         if (run_only_random_actions_for_next_scene == 0)
@@ -655,8 +663,10 @@ int main()
             // Learning policy networks from replay buffer
             train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
             policy_fc_net.loss_A = 0.0;
+            int d_t_cnt = 0;
             for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
             {
+                
                 int train_nr = train_policy_net_rand_list[train_cnt];
                 int g_replay_cnt = train_nr / number_of_policy_train_frm;
                 int frame_g = train_nr % number_of_policy_train_frm;
@@ -756,7 +766,7 @@ int main()
                     {
                         if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i] + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = policy_target_offset + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
@@ -786,6 +796,28 @@ int main()
                 // Now also target values are ready for policy netowork training
                 policy_fc_net.backpropagtion();      // Train
                 policy_fc_net.update_all_weights(1); // and update weights
+
+                if(d_t_cnt<update_policy_view_after)
+                {
+                    d_t_cnt++;
+                }
+                else
+                {
+                    d_t_cnt=0;
+                    //View mat_policy_net_first_layer_view
+                    //vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
+                    for(int L1_node_cnt=0;L1_node_cnt<policy_net_hid_nodes_L1;L1_node_cnt++)
+                    {
+                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                        {
+                            int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
+                            int col = pixel_width  * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                            mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
+                        }
+                    }
+                    imshow("mat_policy_net_first_layer_view", mat_policy_net_first_layer_view);
+                    waitKey(1);
+                }
             }
             cout << endl;
             cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
