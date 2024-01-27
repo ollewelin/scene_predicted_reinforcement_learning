@@ -155,10 +155,12 @@ int main()
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_weights_next_sc, mat_input_strobe_frames, mat_next_scene_all_actions, mat_next_scene_one_action;
+    Mat mat_policy_net_first_layer_view;
     mat_input_weights_next_sc.create(pixel_height * nr_frames_strobed * next_scene_hid_nodes_L1, pixel_width, CV_32FC1);
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     mat_next_scene_one_action.create(pixel_height, pixel_width, CV_32FC1);
+    
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
@@ -168,6 +170,9 @@ int main()
     const int policy_net_hid_nodes_L3 = 10;
     const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
+    const int m_p_hight_block = 5;//policy_net_hid_nodes_L1 must be a multiple of this value
+    mat_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+
 
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
@@ -203,12 +208,13 @@ int main()
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L2);
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L3);
 
+
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
-    //------------------------------------------------------------------------------
-    // Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
-    // Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
-    // when run_only_random_actions_for_next_scene = 1
+//------------------------------------------------------------------------------
+//Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
+//Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
+//when run_only_random_actions_for_next_scene = 1
     typedef struct
     {
         // This two int below pointing to replay action how was taken from random "dice" action. This is used to train next frame predictor excusivly on ranodm action to prevent next scene net to learn any policy
@@ -222,17 +228,16 @@ int main()
     vector<int> rand_indx_act_list;
     rand_indx_act_list.clear();
     rand_action_list.clear();
-    //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
     const int g_replay_size = 100; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
-    const double reward_gain = 1.0;
-    const double reward_offset = 0.0;
+    double reward_gain = 1.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.00001;
-    policy_fc_net.momentum = 0.025; //
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.1; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -242,7 +247,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.01 * g_replay_size / 1000;
+    const double derating_epsilon = 0.005 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -267,10 +272,10 @@ int main()
     }
 
     cout << " epsilon = " << epsilon << endl;
-    const double gamma_decay = 0.2;
-
+    double gamma_decay = 0.85f;
+    
     const int retrain_next_pred_net_times = 1;
-    const int save_after_nr = 25;
+    const int save_after_nr = 5;
     // statistics report
     const int max_w_p_nr = 1000;
     int win_p_cnt = 0;
@@ -278,8 +283,8 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
     int run_only_random_actions_for_next_scene = 0; // Toggle 1 or 0. 1 run only random action for training the next scene predictor net. 0 Run policy network with epsilon
-                                                    // rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
-    // will be removed because now I compleatly separate next scene net training episode from policy training epoch
+//rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
+//will be removed because now I compleatly separate next scene net training episode from policy training epoch
 
     vector<vector<replay_data_struct>> replay_buffer;
     for (int i = 0; i < g_replay_size; i++)
@@ -291,6 +296,7 @@ int main()
     // const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
     const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed;
     const int number_of_policy_train_tot = g_replay_size * number_of_policy_train_frm;
+    const int update_policy_view_after = number_of_policy_train_tot / 10;
     for (int i = 0; i < number_of_policy_train_tot; i++)
     {
         train_policy_net_rand_list.push_back(i);
@@ -311,6 +317,7 @@ int main()
         if (answer == 'Y' || answer == 'y')
         {
             policy_fc_net.randomize_weights(init_random_weight_propotion);
+      //      policy_fc_net.randomize_weights(1.5);
         }
         else
         {
@@ -321,6 +328,8 @@ int main()
     {
         next_scene_fc_net.randomize_weights(init_random_weight_propotion);
         policy_fc_net.randomize_weights(init_random_weight_propotion);
+    //    policy_fc_net.randomize_weights(1.5);
+
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
@@ -345,9 +354,9 @@ int main()
         {
             run_only_random_actions_for_next_scene = 1; // Toggle
             cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
-            if (epoch > 0)
+            if(epoch>0)
             {
-                epoch--; // Don't count up epoch until we start policy instead
+                epoch--;//Don't count up epoch until we start policy instead
             }
         }
         cout << "******** Epoch number = " << epoch << " **********" << endl;
@@ -541,13 +550,13 @@ int main()
                             if (gameObj1.square == 1)
                             {
 
-                                rewards = 1.0; // Win Rewards avoid square
-                                               //       rewards /= abs_diff;
+                                rewards = reward_gain * 1.0; // Win Rewards avoid square
+                                                             //       rewards /= abs_diff;
                             }
                             else
                             {
-                                rewards = 1.0; // Win Rewards catch ball
-                                               //       rewards /= abs_diff;
+                                rewards = reward_gain * 1.0; // Win Rewards catch ball
+                                                             //       rewards /= abs_diff;
                             }
                             if (run_only_random_actions_for_next_scene == 0)
                             {
@@ -559,17 +568,16 @@ int main()
                             if (gameObj1.square == 1)
                             {
                                 //  rewards = -2.35; // Lose Penalty
-                                rewards = (-1.0);
+                                rewards = reward_gain * (-1.0);
                                 // rewards /= abs_diff;
                             }
                             else
                             {
                                 // rewards = -3.95; // Lose Penalty
-                                rewards = (-1.0);
+                                rewards = reward_gain * (-1.0);
                                 // rewards *= abs_diff;
                             }
                         }
-                        rewards = rewards * reward_gain + reward_offset;
                         replay_buffer[g_replay_cnt][frame_g].rewards_Q = rewards;
                         cout << "                                                                                                       " << endl;
                         std::cout << "\033[F";
@@ -654,8 +662,10 @@ int main()
             // Learning policy networks from replay buffer
             train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
             policy_fc_net.loss_A = 0.0;
+            int d_t_cnt = 0;
             for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
             {
+                
                 int train_nr = train_policy_net_rand_list[train_cnt];
                 int g_replay_cnt = train_nr / number_of_policy_train_frm;
                 int frame_g = train_nr % number_of_policy_train_frm;
@@ -785,6 +795,28 @@ int main()
                 // Now also target values are ready for policy netowork training
                 policy_fc_net.backpropagtion();      // Train
                 policy_fc_net.update_all_weights(1); // and update weights
+
+                if(d_t_cnt<update_policy_view_after)
+                {
+                    d_t_cnt++;
+                }
+                else
+                {
+                    d_t_cnt=0;
+                    //View mat_policy_net_first_layer_view
+                    //vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
+                    for(int L1_node_cnt=0;L1_node_cnt<policy_net_hid_nodes_L1;L1_node_cnt++)
+                    {
+                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                        {
+                            int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
+                            int col = pixel_width  * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                            mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
+                        }
+                    }
+                    imshow("mat_policy_net_first_layer_view", mat_policy_net_first_layer_view);
+                    waitKey(1);
+                }
             }
             cout << endl;
             cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
