@@ -583,35 +583,38 @@ int main()
                 }
                 replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
-
-            total_plays++;
-            // Calculate win probablilty
-            if (win_p_cnt > 10)
+            if (run_only_random_actions_for_next_scene == 0)
             {
-                now_win_probability = (double)win_counter / (double)(win_p_cnt + 1);
-                if (g_replay_cnt == g_replay_size - 1)
+                total_plays++;
+                // Calculate win probablilty
+                if (win_p_cnt > 10)
                 {
-                    cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                    now_win_probability = (double)win_counter / (double)(win_p_cnt + 1);
+                    if (g_replay_cnt == g_replay_size - 1)
+                    {
+                        cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                    }
                 }
-            }
-            else
-            {
-                now_win_probability = 0.5;
-            }
-            if (win_p_cnt < max_w_p_nr)
-            {
-                win_p_cnt++;
-            }
-            else
-            {
-                win_p_cnt = 0;
-                win_counter = 0;
-                // Store last 1000 win probablilty
-                last_win_probability = now_win_probability;
+                else
+                {
+                    now_win_probability = 0.5;
+                }
+                if (win_p_cnt < max_w_p_nr)
+                {
+                    win_p_cnt++;
+                }
+                else
+                {
+                    win_p_cnt = 0;
+                    win_counter = 0;
+                    // Store last 1000 win probablilty
+                    last_win_probability = now_win_probability;
+                }
             }
         }
         if (run_only_random_actions_for_next_scene == 0)
         {
+
             if (epsilon > stop_min_epsilon)
             {
                 if (warm_up_eps_cnt < warm_up_eps_nr)
@@ -628,6 +631,8 @@ int main()
                     epsilon -= derating_epsilon;
                 }
             }
+
+
         }
         cout << endl;
         if (run_only_random_actions_for_next_scene == 0)
