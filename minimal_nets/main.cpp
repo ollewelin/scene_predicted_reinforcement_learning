@@ -231,22 +231,22 @@ int main()
 //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 1000; // how meny episode on one epoch
+    const int g_replay_size = 100; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
-    double reward_gain = 1.0;
+    const double reward_gain = 1.0;
+    const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.001;
-    policy_fc_net.momentum = 0.1; //
+    policy_fc_net.learning_rate = 0.005;
+    policy_fc_net.momentum = 0.9; //
 
-    double init_random_next_pre_weight_propotion = 0.25;
-    double init_random_policy_net_weight_propotion = 0.25;
+    double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
     double warm_up_epsilon = warm_up_epsilon_default;
     const double warm_up_eps_derating = 0.02;
     int warm_up_eps_nr = 3;
     int warm_up_eps_cnt = 0;
-    const double start_epsilon = 0.5;
+    const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
     const double derating_epsilon = 0.005 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
@@ -276,7 +276,7 @@ int main()
     double gamma_decay = 0.85f;
     
     const int retrain_next_pred_net_times = 1;
-    const int save_after_nr = 5;
+    const int save_after_nr = (1000/g_replay_size)+1;
     // statistics report
     const int max_w_p_nr = 1000;
     int win_p_cnt = 0;
@@ -317,7 +317,8 @@ int main()
         cin >> answer;
         if (answer == 'Y' || answer == 'y')
         {
-            policy_fc_net.randomize_weights(init_random_policy_net_weight_propotion);
+            policy_fc_net.randomize_weights(init_random_weight_propotion);
+      //      policy_fc_net.randomize_weights(1.5);
         }
         else
         {
@@ -326,8 +327,10 @@ int main()
     }
     else
     {
-        next_scene_fc_net.randomize_weights(init_random_next_pre_weight_propotion);
-        policy_fc_net.randomize_weights(init_random_policy_net_weight_propotion);
+        next_scene_fc_net.randomize_weights(init_random_weight_propotion);
+        policy_fc_net.randomize_weights(init_random_weight_propotion);
+    //    policy_fc_net.randomize_weights(1.5);
+
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
@@ -763,11 +766,11 @@ int main()
                     {
                         if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i] + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
-                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i]; // No change in training the action not taken
+                            policy_fc_net.target_layer[i] = policy_target_off; // OFF
                         }
                     }
                 }
