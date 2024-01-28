@@ -21,7 +21,7 @@ To evaluate benchmark if this is a good strategy I have make a switch in the pro
     
 set this to 1
 
-    skip_scene_predicotr_only_for_benchmarking = 1;
+    skip_scene_predicotr_only_for_benchmarking = 1;//TODO not finnsih yet....
     frame to policy network = 
     f-3,f-2,f-1,f0
 
