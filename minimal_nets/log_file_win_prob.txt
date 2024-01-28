@@ -1,0 +1,1 @@
+epoch = 1 Win probaility Now = 41% at play count = 100 Old win probablilty = 50% total plays = 100

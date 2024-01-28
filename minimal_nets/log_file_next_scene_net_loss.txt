@@ -1,0 +1,1 @@
+epoch = 0 scene predictiable net Loss = 15735.6
