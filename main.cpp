@@ -160,7 +160,6 @@ int main()
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     mat_next_scene_one_action.create(pixel_height, pixel_width, CV_32FC1);
-    
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
@@ -170,9 +169,8 @@ int main()
     const int policy_net_hid_nodes_L3 = 10;
     const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
-    const int m_p_hight_block = 5;//policy_net_hid_nodes_L1 must be a multiple of this value
+    const int m_p_hight_block = 5; // policy_net_hid_nodes_L1 must be a multiple of this value
     mat_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
-
 
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
@@ -208,13 +206,12 @@ int main()
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L2);
     policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L3);
 
-
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
-//------------------------------------------------------------------------------
-//Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
-//Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
-//when run_only_random_actions_for_next_scene = 1
+    //------------------------------------------------------------------------------
+    // Depcreted will be removed because now I compleatly separate next scene net training episode from policy training epoch
+    // Instead run_only_random_actions_for_next_scene toggle variable will be used so next scene always training the whole replay epsiodes of 100% random dice action
+    // when run_only_random_actions_for_next_scene = 1
     typedef struct
     {
         // This two int below pointing to replay action how was taken from random "dice" action. This is used to train next frame predictor excusivly on ranodm action to prevent next scene net to learn any policy
@@ -228,7 +225,7 @@ int main()
     vector<int> rand_indx_act_list;
     rand_indx_act_list.clear();
     rand_action_list.clear();
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
     const int g_replay_size = 1000; // how meny episode on one epoch
@@ -237,8 +234,8 @@ int main()
     const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.001;
-    policy_fc_net.momentum = 0.1; //
+    policy_fc_net.learning_rate = 0.005;
+    policy_fc_net.momentum = 0.9; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -248,7 +245,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.02 * g_replay_size/1000;
+    const double derating_epsilon = 0.02 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -271,10 +268,29 @@ int main()
         cout << " epsilon is now set to = " << epsilon << endl;
         warm_up_eps_nr = 0;
     }
+    cout << "Do you want to use next scene network = Y/N " << endl;
+    cin >> answer;
+    if (answer == 'Y' || answer == 'y')
+    {
+        skip_scene_predicotr_only_for_benchmarking = 0;
+        cout << "************************************************************************************************" << endl;
+        cout << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
+        cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+        cout << "************************************************************************************************" << endl;
+    }
+    else
+    {
+        skip_scene_predicotr_only_for_benchmarking = 1;
+        cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+        cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcemnet learning network " << endl;
+        cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+        cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+    }
+//skip_scene_predicotr_only_for_benchmarking
 
     cout << " epsilon = " << epsilon << endl;
     double gamma_decay = 0.85f;
-    
+
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
     // statistics report
@@ -284,8 +300,8 @@ int main()
     double last_win_probability = 0.5;
     double now_win_probability = last_win_probability;
     int run_only_random_actions_for_next_scene = 0; // Toggle 1 or 0. 1 run only random action for training the next scene predictor net. 0 Run policy network with epsilon
-//rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
-//will be removed because now I compleatly separate next scene net training episode from policy training epoch
+                                                    // rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
+    // will be removed because now I compleatly separate next scene net training episode from policy training epoch
 
     vector<vector<replay_data_struct>> replay_buffer;
     for (int i = 0; i < g_replay_size; i++)
@@ -318,7 +334,7 @@ int main()
         if (answer == 'Y' || answer == 'y')
         {
             policy_fc_net.randomize_weights(init_random_weight_propotion);
-      //      policy_fc_net.randomize_weights(1.5);
+            //      policy_fc_net.randomize_weights(1.5);
         }
         else
         {
@@ -329,8 +345,7 @@ int main()
     {
         next_scene_fc_net.randomize_weights(init_random_weight_propotion);
         policy_fc_net.randomize_weights(init_random_weight_propotion);
-    //    policy_fc_net.randomize_weights(1.5);
-
+        //    policy_fc_net.randomize_weights(1.5);
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
@@ -353,11 +368,18 @@ int main()
         }
         else
         {
-            run_only_random_actions_for_next_scene = 1; // Toggle
-            cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
-            if(epoch>0)
+            if (skip_scene_predicotr_only_for_benchmarking == 0)
             {
-                epoch--;//Don't count up epoch until we start policy instead
+                run_only_random_actions_for_next_scene = 1; // Toggle
+                cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
+                if (epoch > 0)
+                {
+                    epoch--; // Don't count up epoch until we start policy instead
+                }
+            }
+            else
+            {
+                run_only_random_actions_for_next_scene = 0; //Never toggle Skip running next scene in benchmark mode when next scene netowork not used
             }
         }
         cout << "******** Epoch number = " << epoch << " **********" << endl;
@@ -666,7 +688,7 @@ int main()
             int d_t_cnt = 0;
             for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
             {
-                
+
                 int train_nr = train_policy_net_rand_list[train_cnt];
                 int g_replay_cnt = train_nr / number_of_policy_train_frm;
                 int frame_g = train_nr % number_of_policy_train_frm;
@@ -797,21 +819,21 @@ int main()
                 policy_fc_net.backpropagtion();      // Train
                 policy_fc_net.update_all_weights(1); // and update weights
 
-                if(d_t_cnt<update_policy_view_after)
+                if (d_t_cnt < update_policy_view_after)
                 {
                     d_t_cnt++;
                 }
                 else
                 {
-                    d_t_cnt=0;
-                    //View mat_policy_net_first_layer_view
-                    //vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
-                    for(int L1_node_cnt=0;L1_node_cnt<policy_net_hid_nodes_L1;L1_node_cnt++)
+                    d_t_cnt = 0;
+                    // View mat_policy_net_first_layer_view
+                    // vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
+                    for (int L1_node_cnt = 0; L1_node_cnt < policy_net_hid_nodes_L1; L1_node_cnt++)
                     {
                         for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                         {
                             int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
-                            int col = pixel_width  * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                            int col = pixel_width * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
                             mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
                         }
                     }
@@ -822,123 +844,129 @@ int main()
             cout << endl;
             cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
             cout << endl;
+            if (skip_scene_predicotr_only_for_benchmarking == 1)
+            {
+                cout << "***************************************************************************************************************************" << endl;
+                cout << "******** Benchmark mode evaluation mode. Skip Training the next scene predictiable network. Next scenen NOT USED **********" << endl;
+                cout << "***************************************************************************************************************************" << endl;
+            }
         }
-        //                             if(skip_scene_predicotr_only_for_benchmarking == 0)
-        //                                    {
-        //        if (run_only_random_actions_for_next_scene == 1)
         else
         {
-            cout << "*********************************************************************************************************************************" << endl;
-            cout << "******** Training the next scene predictiable network exclusive on random dice actions on replay from Epoch number = " << epoch << " **********" << endl;
-            cout << "*********************************************************************************************************************************" << endl;
-
-            cout << "rand_act_counter = " << rand_act_counter << endl;
-            // Training next scene networks from replay buffer only from dice action
-            rand_action_list.clear();
-            rand_indx_act_list.clear();
-
-            for (int i = 0; i < rand_act_counter; i++)
+            if (skip_scene_predicotr_only_for_benchmarking == 0)
             {
-                rand_action_list.push_back(rand_act_data_item);
-                rand_indx_act_list.push_back(0);
-            }
+                cout << "*********************************************************************************************************************************" << endl;
+                cout << "******** Training the next scene predictiable network exclusive on random dice actions on replay from Epoch number = " << epoch << " **********" << endl;
+                cout << "*********************************************************************************************************************************" << endl;
 
-            int r_list_index = 0;
-            int size_of_rand_a_list = rand_action_list.size();
-            // cout << "size_of_rand_a_list = " << size_of_rand_a_list << endl;
-            if (rand_act_counter > 0)
-            {
-                for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+                cout << "rand_act_counter = " << rand_act_counter << endl;
+                // Training next scene networks from replay buffer only from dice action
+                rand_action_list.clear();
+                rand_indx_act_list.clear();
+
+                for (int i = 0; i < rand_act_counter; i++)
                 {
-                    for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++)
+                    rand_action_list.push_back(rand_act_data_item);
+                    rand_indx_act_list.push_back(0);
+                }
+
+                int r_list_index = 0;
+                int size_of_rand_a_list = rand_action_list.size();
+                // cout << "size_of_rand_a_list = " << size_of_rand_a_list << endl;
+                if (rand_act_counter > 0)
+                {
+                    for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
                     {
-                        if (replay_buffer[g_replay_cnt][frame_g].dice_used == 1)
+                        for (int frame_g = 0; frame_g < gameObj1.nr_of_frames; frame_g++)
                         {
-                            if (r_list_index > size_of_rand_a_list - 1) // Check size...
+                            if (replay_buffer[g_replay_cnt][frame_g].dice_used == 1)
                             {
-                                cout << "! Error r_list_index > size_of_rand_a_list - 1  r_list_index = " << r_list_index << " size_of_rand_a_list - 1 = " << size_of_rand_a_list - 1 << endl;
-                                cout << " EXIT this program now !" << endl;
-                                exit(0);
+                                if (r_list_index > size_of_rand_a_list - 1) // Check size...
+                                {
+                                    cout << "! Error r_list_index > size_of_rand_a_list - 1  r_list_index = " << r_list_index << " size_of_rand_a_list - 1 = " << size_of_rand_a_list - 1 << endl;
+                                    cout << " EXIT this program now !" << endl;
+                                    exit(0);
+                                }
+                                rand_action_list[r_list_index].frame_index_of_rand_act = frame_g;        // write index of what frame the random action was taken
+                                rand_action_list[r_list_index].episode_index_of_rand_act = g_replay_cnt; // write index of what replat episode the random action was taken
+                                rand_indx_act_list[r_list_index] = r_list_index;                         // Just do a stright list start from 0,1,2.... and so on later shuffel this list by the fisher_yates_shuffle to randomize the training order later
+                                r_list_index++;                                                          // increas the list index to the end
                             }
-                            rand_action_list[r_list_index].frame_index_of_rand_act = frame_g;        // write index of what frame the random action was taken
-                            rand_action_list[r_list_index].episode_index_of_rand_act = g_replay_cnt; // write index of what replat episode the random action was taken
-                            rand_indx_act_list[r_list_index] = r_list_index;                         // Just do a stright list start from 0,1,2.... and so on later shuffel this list by the fisher_yates_shuffle to randomize the training order later
-                            r_list_index++;                                                          // increas the list index to the end
                         }
                     }
-                }
-                // random list make up finnish now
+                    // random list make up finnish now
 
-                // Start Training next predictide net
-                for (int retrain = 0; retrain < retrain_next_pred_net_times; retrain++)
-                {
-                    // Randomize the order of random action to train on in the random list.
-                    rand_indx_act_list = fisher_yates_shuffle(rand_indx_act_list); // Randomize the training order of the next scene net training
-                    //
-                    next_scene_fc_net.loss_A = 0.0;
-
-                    for (int train_cnt = 0; train_cnt < size_of_rand_a_list; train_cnt++)
+                    // Start Training next predictide net
+                    for (int retrain = 0; retrain < retrain_next_pred_net_times; retrain++)
                     {
+                        // Randomize the order of random action to train on in the random list.
+                        rand_indx_act_list = fisher_yates_shuffle(rand_indx_act_list); // Randomize the training order of the next scene net training
+                        //
+                        next_scene_fc_net.loss_A = 0.0;
 
-                        int idx_r_train = rand_indx_act_list[train_cnt];
-                        int inp_n_idx = 0;
-                        int frame_g = rand_action_list[idx_r_train].frame_index_of_rand_act;
-                        int g_replay_cnt = rand_action_list[idx_r_train].episode_index_of_rand_act;
-
-                        cout << "                                                                                                       " << endl;
-                        std::cout << "\033[F";
-                        cout << " next prediction net train count down = " << size_of_rand_a_list - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << " retrain = " << retrain << endl;
-                        std::cout << "\033[F";
-
-                        if (frame_g < gameObj1.nr_of_frames - 1)
+                        for (int train_cnt = 0; train_cnt < size_of_rand_a_list; train_cnt++)
                         {
-                            // Load input frame video from replay memory
-                            for (int f = 0; f < nr_frames_strobed; f++)
+
+                            int idx_r_train = rand_indx_act_list[train_cnt];
+                            int inp_n_idx = 0;
+                            int frame_g = rand_action_list[idx_r_train].frame_index_of_rand_act;
+                            int g_replay_cnt = rand_action_list[idx_r_train].episode_index_of_rand_act;
+
+                            cout << "                                                                                                       " << endl;
+                            std::cout << "\033[F";
+                            cout << " next prediction net train count down = " << size_of_rand_a_list - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << " retrain = " << retrain << endl;
+                            std::cout << "\033[F";
+
+                            if (frame_g < gameObj1.nr_of_frames - 1)
                             {
+                                // Load input frame video from replay memory
+                                for (int f = 0; f < nr_frames_strobed; f++)
+                                {
+                                    for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                    {
+                                        double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                        // Load the prediction network with input frame video from replay memory
+                                        next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                        inp_n_idx++;
+                                    }
+                                }
+                                // Load taken action from replay memory
+                                for (int i = 0; i < nr_of_actions; i++)
+                                {
+                                    double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
+                                    next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                                }
+                                next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
-                                    double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                    // Load the prediction network with input frame video from replay memory
-                                    next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                    inp_n_idx++;
+                                    // Load the targer data from reply buffer to train the next pred net
+                                    next_scene_fc_net.target_layer[pix_idx] = (double)replay_buffer[g_replay_cnt][frame_g + 1].video_frame[pix_idx];
                                 }
+                                next_scene_fc_net.backpropagtion();      // Train
+                                next_scene_fc_net.update_all_weights(1); // and update weights
+                                // Show predcited fram example
+                                // mat_next_scene_one_action
                             }
-                            // Load taken action from replay memory
-                            for (int i = 0; i < nr_of_actions; i++)
+                            else
                             {
-                                double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
-                                next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                                cout << endl;
+                                cout << "Error frame_g to large skip next prediction network training. frame_g = " << frame_g << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
+                                cout << endl;
                             }
-                            next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                            {
-                                // Load the targer data from reply buffer to train the next pred net
-                                next_scene_fc_net.target_layer[pix_idx] = (double)replay_buffer[g_replay_cnt][frame_g + 1].video_frame[pix_idx];
-                            }
-                            next_scene_fc_net.backpropagtion();      // Train
-                            next_scene_fc_net.update_all_weights(1); // and update weights
-                            // Show predcited fram example
-                            // mat_next_scene_one_action
                         }
-                        else
-                        {
-                            cout << endl;
-                            cout << "Error frame_g to large skip next prediction network training. frame_g = " << frame_g << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
-                            cout << endl;
-                        }
+                        cout << endl;
+                        cout << "scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
+                        cout << endl;
                     }
+                }
+                else
+                {
                     cout << endl;
-                    cout << "scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
+                    cout << " No Training of next scene predictiable net was made because no random action was taken rand_act_counter = " << rand_act_counter << endl;
                     cout << endl;
                 }
+                //End next scene traning 
             }
-            else
-            {
-                cout << endl;
-                cout << " No Training of next scene predictiable net was made because no random action was taken rand_act_counter = " << rand_act_counter << endl;
-                cout << endl;
-            }
-
             // Save all weights
             if (save_cnt < save_after_nr)
             {
