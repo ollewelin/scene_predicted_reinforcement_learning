@@ -434,10 +434,10 @@ int main()
                                         int first_frame_size = pixel_width * pixel_height;
                                         if (pix_idx > first_frame_size)
                                         {
-                                            // let say we have 4 frame strobes f0,f1,f2,f3 and then next prediced pred_f4_next
-                                            // we will skip instert f0 to policy net f0 only used for next_scene_fc_net.input_layer
-                                            // next_scene_fc_net.input_layer use f0,f1,f2,f3
-                                            // policy_fc_net.input_layer instead use f1,f2,f3 inserted here and pred_f4_next will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                            // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                            // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
                                             policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
                                     }
@@ -445,7 +445,7 @@ int main()
                                     {
                                         // Bench mark methode
                                         // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                        policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f0,f1,f2,f3 instead of loading f1,f2,f3, pred_f4_next
+                                        policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
                                     }
                                     inp_n_idx++;
                                 }
@@ -729,10 +729,10 @@ int main()
                                 int first_frame_size = pixel_width * pixel_height;
                                 if (pix_idx > first_frame_size)
                                 {
-                                    // let say we have 4 frame strobes f0,f1,f2,f3 and then next prediced pred_f4_next
-                                    // we will skip instert f0 to policy net f0 only used for next_scene_fc_net.input_layer
-                                    // next_scene_fc_net.input_layer use f0,f1,f2,f3
-                                    // policy_fc_net.input_layer instead use f1,f2,f3 inserted here and pred_f4_next will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                    // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                    // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
+                                    // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                    // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
                                     policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                 }
                             }
@@ -740,7 +740,7 @@ int main()
                             {
                                 // Bench mark methode
                                 // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f0,f1,f2,f3 instead of loading f1,f2,f3, pred_f4_next
+                                policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
                             }
                             inp_n_idx++;
                         }
@@ -782,7 +782,7 @@ int main()
                         for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                         {
                             double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                            policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here at terminal state we load f0,f1,f2,f3 instead of loading f1,f2,f3, pred_f4_next
+                            policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here at terminal state we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
                             inp_n_idx++;
                         }
                     }
