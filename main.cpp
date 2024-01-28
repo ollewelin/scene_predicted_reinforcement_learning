@@ -155,7 +155,8 @@ int main()
     const int next_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_weights_next_sc, mat_input_strobe_frames, mat_next_scene_all_actions, mat_next_scene_one_action;
-    Mat mat_policy_net_first_layer_view;
+    Mat mat_f_last_policy_net_first_layer_view;
+    Mat mat_f0_policy_net_first_layer_view;
     mat_input_weights_next_sc.create(pixel_height * nr_frames_strobed * next_scene_hid_nodes_L1, pixel_width, CV_32FC1);
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
@@ -170,7 +171,8 @@ int main()
     const int policy_net_out_nodes = nr_of_actions; //
     const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
     const int m_p_hight_block = 5; // policy_net_hid_nodes_L1 must be a multiple of this value
-    mat_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+    mat_f_last_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+    mat_f0_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
 
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
@@ -826,7 +828,7 @@ int main()
                 else
                 {
                     d_t_cnt = 0;
-                    // View mat_policy_net_first_layer_view
+                    // View mat_f_last_policy_net_first_layer_view
                     // vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
                     for (int L1_node_cnt = 0; L1_node_cnt < policy_net_hid_nodes_L1; L1_node_cnt++)
                     {
@@ -834,10 +836,12 @@ int main()
                         {
                             int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
                             int col = pixel_width * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
-                            mat_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx] + 0.5;
+                            mat_f_last_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-1)) ] + 0.5;
+                            mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-2)) ] + 0.5;
                         }
                     }
-                    imshow("mat_policy_net_first_layer_view", mat_policy_net_first_layer_view);
+                    imshow("mat_f_last_policy_net_first_layer_view", mat_f_last_policy_net_first_layer_view);
+                    imshow("mat_f0_policy_net_first_layer_view", mat_f0_policy_net_first_layer_view);
                     waitKey(1);
                 }
             }
