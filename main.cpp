@@ -141,7 +141,7 @@ int main()
     policy_fc_net.block_type = 2;
     policy_fc_net.use_softmax = 0;
     policy_fc_net.activation_function_mode = 2;
-    policy_fc_net.force_last_activation_function_mode = 1;
+    policy_fc_net.force_last_activation_function_mode = 3;
     policy_fc_net.use_skip_connect_mode = 0;
     policy_fc_net.use_dropouts = 0;
     policy_fc_net.dropout_proportion = 0.0;
@@ -234,7 +234,7 @@ int main()
     const int g_replay_size = 1000; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
-    const double policy_target_offset = 0.5;
+    const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
     policy_fc_net.learning_rate = 0.001;
@@ -248,7 +248,7 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.005 * g_replay_size/1000;
+    const double derating_epsilon = 0.02 * g_replay_size/1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     if (warm_up_eps_nr > 0)
     {
@@ -273,7 +273,7 @@ int main()
     }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma_decay = 0.55f;
+    double gamma_decay = 0.85f;
     
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
@@ -766,11 +766,11 @@ int main()
                     {
                         if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = policy_target_offset + replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
-                            policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i]; // No change in training the action not taken
+                            policy_fc_net.target_layer[i] = policy_target_off; // OFF
                         }
                     }
                 }
