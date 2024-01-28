@@ -238,7 +238,7 @@ int main()
     //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 100; // how meny episode on one epoch
+    const int g_replay_size = 1000; // how meny episode on one epoch
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
     const double policy_target_off = 0.0;
