@@ -282,7 +282,7 @@ int main()
     {
         skip_scene_predicotr_only_for_benchmarking = 1;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
-        cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcemnet learning network " << endl;
+        cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
         cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
     }
