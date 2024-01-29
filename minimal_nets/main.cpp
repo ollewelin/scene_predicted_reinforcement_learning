@@ -244,8 +244,8 @@ int main()
     const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.0005;
-    policy_fc_net.momentum = 0.09; //
+    policy_fc_net.learning_rate = 0.005;
+    policy_fc_net.momentum = 0.9; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -257,6 +257,7 @@ int main()
     const double stop_min_epsilon = 0.05;
     const double derating_epsilon = 0.001 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
+    const double gamma_decay = 0.85f;
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -296,10 +297,67 @@ int main()
         cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
     }
-//skip_scene_predicotr_only_for_benchmarking
+
+    for (int i = 0; i < 3; i++)
+    {
+        string log_filename;
+        
+        switch (i)
+        {
+        case 0:
+            log_filename = log_file_next_scene_net_loss;
+            break;
+        case 1:
+            log_filename = log_file_policy_net_loss;
+            break;
+        case 2:
+            log_filename = log_file_win_prob;
+            break;
+        
+        default:
+            log_filename = log_file_win_prob;
+            break;
+        }
+        std::ofstream file(log_filename, std::ios::app);
+        if (skip_scene_predicotr_only_for_benchmarking == 0)
+        {
+            file << "************************************************************************************************" << endl;
+            file << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
+            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "************************************************************************************************" << endl;
+        }
+        else
+        {
+            file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+            file << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
+            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+        }
+
+        file << "Parmeters settings :" << endl;
+        file << "next_scene_hid_nodes_L1 = " << next_scene_hid_nodes_L1 << endl;
+        file << "next_scene_hid_nodes_L2 = " << next_scene_hid_nodes_L2 << endl;
+        file << "next_scene_hid_nodes_L3 = " << next_scene_hid_nodes_L3 << endl;
+
+        file << "policy_net_hid_nodes_L1 = " << policy_net_hid_nodes_L1 << endl;
+        file << "policy_net_hid_nodes_L2 = " << policy_net_hid_nodes_L2 << endl;
+        file << "policy_net_hid_nodes_L3 = " << policy_net_hid_nodes_L3 << endl;
+
+        file << "next_scene_fc_net.learning_rate = " << next_scene_fc_net.learning_rate << endl;
+        file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;        
+        file << "policy_fc_net.learning_rate = " << policy_fc_net.learning_rate << endl;
+        file << "policy_fc_net.momentum = " << policy_fc_net.momentum << endl;
+
+        file << "g_replay_size = " << g_replay_size << endl;
+        file << "derating_epsilon = " << derating_epsilon << endl;
+        file << "gamma_decay = " << gamma_decay << endl;
+
+        // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+        file.close();
+    }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma_decay = 0.85f;
+    
 
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
