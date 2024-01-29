@@ -12,9 +12,11 @@ using namespace std;
 #include <cstdlib>
 #include <chrono>
 #include <opencv2/opencv.hpp>
+//#include <opencv2/plot.hpp>
 #include <opencv2/core/core.hpp> // Basic OpenCV structures (cv::Mat, Scalar)
 #include <iomanip>               // for std::setprecision
 #include <float.h>
+#include <fstream>
 
 #include "pinball_game.hpp"
 
@@ -127,6 +129,12 @@ int main()
     next_scene_net_filename = "next_scene_net_weights.dat";
     string policy_fc_net_filename;
     policy_fc_net_filename = "policy_fc_net_weights.dat";
+    string log_file_next_scene_net_loss;
+    log_file_next_scene_net_loss = "log_file_next_scene_net_loss.txt";
+    string log_file_policy_net_loss;
+    log_file_policy_net_loss = "log_file_policy_net_loss.txt";
+    string log_file_win_prob;
+    log_file_win_prob = "log_file_win_prob.txt";
 
     next_scene_fc_net.get_version();
     next_scene_fc_net.block_type = 2;
@@ -247,8 +255,9 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.02 * g_replay_size / 1000;
+    const double derating_epsilon = 0.001 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
+    const double gamma_decay = 0.85f;
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -288,10 +297,67 @@ int main()
         cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
     }
-//skip_scene_predicotr_only_for_benchmarking
+
+    for (int i = 0; i < 3; i++)
+    {
+        string log_filename;
+        
+        switch (i)
+        {
+        case 0:
+            log_filename = log_file_next_scene_net_loss;
+            break;
+        case 1:
+            log_filename = log_file_policy_net_loss;
+            break;
+        case 2:
+            log_filename = log_file_win_prob;
+            break;
+        
+        default:
+            log_filename = log_file_win_prob;
+            break;
+        }
+        std::ofstream file(log_filename, std::ios::app);
+        if (skip_scene_predicotr_only_for_benchmarking == 0)
+        {
+            file << "************************************************************************************************" << endl;
+            file << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
+            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "************************************************************************************************" << endl;
+        }
+        else
+        {
+            file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+            file << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
+            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
+        }
+
+        file << "Parmeters settings :" << endl;
+        file << "next_scene_hid_nodes_L1 = " << next_scene_hid_nodes_L1 << endl;
+        file << "next_scene_hid_nodes_L2 = " << next_scene_hid_nodes_L2 << endl;
+        file << "next_scene_hid_nodes_L3 = " << next_scene_hid_nodes_L3 << endl;
+
+        file << "policy_net_hid_nodes_L1 = " << policy_net_hid_nodes_L1 << endl;
+        file << "policy_net_hid_nodes_L2 = " << policy_net_hid_nodes_L2 << endl;
+        file << "policy_net_hid_nodes_L3 = " << policy_net_hid_nodes_L3 << endl;
+
+        file << "next_scene_fc_net.learning_rate = " << next_scene_fc_net.learning_rate << endl;
+        file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;        
+        file << "policy_fc_net.learning_rate = " << policy_fc_net.learning_rate << endl;
+        file << "policy_fc_net.momentum = " << policy_fc_net.momentum << endl;
+
+        file << "g_replay_size = " << g_replay_size << endl;
+        file << "derating_epsilon = " << derating_epsilon << endl;
+        file << "gamma_decay = " << gamma_decay << endl;
+
+        // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+        file.close();
+    }
 
     cout << " epsilon = " << epsilon << endl;
-    double gamma_decay = 0.85f;
+    
 
     const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
@@ -506,23 +572,60 @@ int main()
                                 policy_fc_net.forward_pass();
                                 // int what_act_was_stongest_i_debug = 0;
                                 // double debug_v = 0;
-                                for (int i = 0; i < nr_of_actions; i++)
+                                if (skip_scene_predicotr_only_for_benchmarking == 0) // Normal mode
                                 {
-                                    double action_policy_net_output = policy_fc_net.output_layer[i];
-                                    if (term_state == NORMAL_STATE || skip_scene_predicotr_only_for_benchmarking == 1) // If we use bench mark mode we skip ONE_STEP_BEFORE_TERMINAL_STATE section it's not there in benchmark mode
+                                    for (int i = 0; i < nr_of_actions; i++)
+                                    {
+                                        double action_policy_net_output = policy_fc_net.output_layer[i];
+                                        if (term_state == NORMAL_STATE)
+                                        {
+                                            if (action_policy_net_output > strongest_action_value)
+                                            {
+                                                strongest_action_value = action_policy_net_output; // Store the strongest policy value
+                                                which_next_frame_have_stongest_action = act;       // Store what action prediced frame of the next predicted frame have the strongest action value
+                                                // what_act_was_stongest_i_debug = i;
+                                                // debug_v = strongest_action_value;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // ONE_STEP_BEFORE_TERMINAL_STATE
+                                            if (i == 0)
+                                            {
+                                                sum_up_all_action_value_at_term_state = 0;
+                                            }
+                                            // At the predicted terminal state use summed action value instead of the max next action value
+                                            // because in the terminal state action don't matters for the reward (no more action is possible to take at terminal)
+                                            // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
+                                            // therefor a sum up of all action is a convinient way to use the policy network i think
+                                            sum_up_all_action_value_at_term_state += action_policy_net_output;
+                                            if (i == nr_of_actions - 1)
+                                            {
+                                                // Check agianst the other next predicted frame summed action values
+                                                if (sum_up_all_action_value_at_term_state > strongest_action_value)
+                                                {
+                                                    which_next_frame_have_stongest_action = act;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // Benchmark mode
+                                    double action_policy_net_output = policy_fc_net.output_layer[act];//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
+                                    if (term_state == NORMAL_STATE)
                                     {
                                         if (action_policy_net_output > strongest_action_value)
                                         {
                                             strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                            which_next_frame_have_stongest_action = act;       // Store what action prediced frame of the next predicted frame have the strongest action value
-                                            // what_act_was_stongest_i_debug = i;
-                                            // debug_v = strongest_action_value;
+                                            which_next_frame_have_stongest_action = act;       // 
                                         }
                                     }
                                     else
                                     {
                                         // ONE_STEP_BEFORE_TERMINAL_STATE
-                                        if (i == 0)
+                                        if (act == 0)//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
                                         {
                                             sum_up_all_action_value_at_term_state = 0;
                                         }
@@ -531,7 +634,7 @@ int main()
                                         // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
                                         // therefor a sum up of all action is a convinient way to use the policy network i think
                                         sum_up_all_action_value_at_term_state += action_policy_net_output;
-                                        if (i == nr_of_actions - 1)
+                                        if (act == nr_of_actions - 1)//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
                                         {
                                             // Check agianst the other next predicted frame summed action values
                                             if (sum_up_all_action_value_at_term_state > strongest_action_value)
@@ -631,6 +734,9 @@ int main()
                     if (g_replay_cnt == g_replay_size - 1)
                     {
                         cout << "Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                        std::ofstream file(log_file_win_prob, std::ios::app);
+                        file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
+                        file.close();
                     }
                 }
                 else
@@ -840,14 +946,27 @@ int main()
                             mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-2)) ] + 0.5;
                         }
                     }
-                    imshow("mat_f_last_policy_net_first_layer_view", mat_f_last_policy_net_first_layer_view);
-                    imshow("mat_f0_policy_net_first_layer_view", mat_f0_policy_net_first_layer_view);
+                    if(skip_scene_predicotr_only_for_benchmarking == 0)
+                    {
+                        imshow("next frame f+1 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
+                        imshow("pressent frame f0 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                    }
+                    else
+                    {
+                        imshow("Benchmark pressent frame f0 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
+                        imshow("Benchmark post frame f-1 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                    }
                     waitKey(1);
                 }
             }
             cout << endl;
             cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
             cout << endl;
+
+            std::ofstream file(log_file_policy_net_loss, std::ios::app);
+            file << "epoch = " << epoch << " epsilon = " << epsilon << " Policy net Loss = " << policy_fc_net.loss_A << endl;
+            file.close();
+
             if (skip_scene_predicotr_only_for_benchmarking == 1)
             {
                 cout << "***************************************************************************************************************************" << endl;
@@ -961,6 +1080,10 @@ int main()
                         cout << endl;
                         cout << "scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
                         cout << endl;
+
+                        std::ofstream file(log_file_next_scene_net_loss, std::ios::app);
+                        file << "epoch = " << epoch << " scene predictiable net Loss = " << next_scene_fc_net.loss_A << endl;
+                        file.close();
                     }
                 }
                 else
