@@ -614,34 +614,10 @@ int main()
                                 {
                                     // Benchmark mode
                                     double action_policy_net_output = policy_fc_net.output_layer[act];//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
-                                    if (term_state == NORMAL_STATE)
+                                    if (action_policy_net_output > strongest_action_value)
                                     {
-                                        if (action_policy_net_output > strongest_action_value)
-                                        {
-                                            strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                            which_next_frame_have_stongest_action = act;       // 
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // ONE_STEP_BEFORE_TERMINAL_STATE
-                                        if (act == 0)//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
-                                        {
-                                            sum_up_all_action_value_at_term_state = 0;
-                                        }
-                                        // At the predicted terminal state use summed action value instead of the max next action value
-                                        // because in the terminal state action don't matters for the reward (no more action is possible to take at terminal)
-                                        // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
-                                        // therefor a sum up of all action is a convinient way to use the policy network i think
-                                        sum_up_all_action_value_at_term_state += action_policy_net_output;
-                                        if (act == nr_of_actions - 1)//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
-                                        {
-                                            // Check agianst the other next predicted frame summed action values
-                                            if (sum_up_all_action_value_at_term_state > strongest_action_value)
-                                            {
-                                                which_next_frame_have_stongest_action = act;
-                                            }
-                                        }
+                                        strongest_action_value = action_policy_net_output; // Store the strongest policy value
+                                        which_next_frame_have_stongest_action = act;       //
                                     }
                                 }
                                 // cout << "which_next_frame_have_stongest_action = " << which_next_frame_have_stongest_action << " what_act_was_stongest_i_debug = " <<  what_act_was_stongest_i_debug << " debug_v = " << debug_v << endl;
