@@ -402,7 +402,7 @@ int main()
         if (answer == 'Y' || answer == 'y')
         {
             policy_fc_net.randomize_weights(init_random_weight_propotion);
-            //      policy_fc_net.randomize_weights(1.5);
+            cout << "Randomized policy network by user. But the next_scene_fc_net weights loaded from file" << endl;
         }
         else
         {
@@ -870,9 +870,9 @@ int main()
                     // Set target values
                     for (int i = 0; i < nr_of_actions; i++)
                     {
-                        if (replay_buffer[g_replay_cnt][frame_g].selected_action == i)
+                        if (replay_buffer[g_replay_cnt][frame_g + 1].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g + 1].rewards_Q; // Train towards rewards_Q value
                         }
                         else
                         {
