@@ -402,7 +402,7 @@ int main()
         if (answer == 'Y' || answer == 'y')
         {
             policy_fc_net.randomize_weights(init_random_weight_propotion);
-            //      policy_fc_net.randomize_weights(1.5);
+            cout << "Randomized policy network by user. But the next_scene_fc_net weights loaded from file" << endl;
         }
         else
         {
