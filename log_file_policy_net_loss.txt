@@ -1,0 +1,130 @@
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predicotr_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.005
+policy_fc_net.momentum = 0.9
+g_replay_size = 1000
+derating_epsilon = 0.001
+epoch = 2 epsilon = 0.598 Policy net Loss = 1449.81
+epoch = 3 epsilon = 0.597 Policy net Loss = 1574.68
+epoch = 4 epsilon = 0.596 Policy net Loss = 1384.86
+epoch = 5 epsilon = 0.595 Policy net Loss = 1386.52
+epoch = 6 epsilon = 0.594 Policy net Loss = 1412.01
+epoch = 7 epsilon = 0.593 Policy net Loss = 1344.65
+epoch = 8 epsilon = 0.592 Policy net Loss = 1432.5
+epoch = 9 epsilon = 0.591 Policy net Loss = 1348.76
+epoch = 10 epsilon = 0.59 Policy net Loss = 1284.84
+epoch = 11 epsilon = 0.589 Policy net Loss = 1370.25
+epoch = 12 epsilon = 0.588 Policy net Loss = 1349.83
+epoch = 13 epsilon = 0.587 Policy net Loss = 1341.36
+epoch = 14 epsilon = 0.586 Policy net Loss = 1342.44
+epoch = 15 epsilon = 0.585 Policy net Loss = 1344.47
+epoch = 16 epsilon = 0.584 Policy net Loss = 1350.87
+epoch = 17 epsilon = 0.583 Policy net Loss = 1298.29
+epoch = 18 epsilon = 0.582 Policy net Loss = 1294.02
+epoch = 19 epsilon = 0.581 Policy net Loss = 1263.95
+epoch = 20 epsilon = 0.58 Policy net Loss = 1283.74
+epoch = 21 epsilon = 0.579 Policy net Loss = 1289.28
+epoch = 22 epsilon = 0.578 Policy net Loss = 1336.74
+epoch = 23 epsilon = 0.577 Policy net Loss = 1241.92
+epoch = 24 epsilon = 0.576 Policy net Loss = 1334.67
+epoch = 25 epsilon = 0.575 Policy net Loss = 1304.47
+epoch = 26 epsilon = 0.574 Policy net Loss = 1262.6
+epoch = 27 epsilon = 0.573 Policy net Loss = 1267.91
+epoch = 28 epsilon = 0.572 Policy net Loss = 1286
+epoch = 29 epsilon = 0.571 Policy net Loss = 1273.84
+epoch = 30 epsilon = 0.57 Policy net Loss = 1294.59
+epoch = 31 epsilon = 0.569 Policy net Loss = 1282.82
+epoch = 32 epsilon = 0.568 Policy net Loss = 1298.17
+epoch = 33 epsilon = 0.567 Policy net Loss = 1275.45
+epoch = 34 epsilon = 0.566 Policy net Loss = 1371.22
+epoch = 35 epsilon = 0.565 Policy net Loss = 1281.49
+epoch = 36 epsilon = 0.564 Policy net Loss = 1301.58
+epoch = 37 epsilon = 0.563 Policy net Loss = 1252.19
+epoch = 38 epsilon = 0.562 Policy net Loss = 1320.87
+epoch = 39 epsilon = 0.561 Policy net Loss = 1296.3
+epoch = 40 epsilon = 0.56 Policy net Loss = 1258.9
+epoch = 41 epsilon = 0.559 Policy net Loss = 1307.15
+epoch = 42 epsilon = 0.558 Policy net Loss = 1221.93
+epoch = 43 epsilon = 0.557 Policy net Loss = 1291.19
+epoch = 44 epsilon = 0.556 Policy net Loss = 1223.64
+epoch = 45 epsilon = 0.555 Policy net Loss = 1284.01
+epoch = 46 epsilon = 0.554 Policy net Loss = 1240.5
+epoch = 47 epsilon = 0.553 Policy net Loss = 1240.74
+epoch = 48 epsilon = 0.552 Policy net Loss = 1202.03
+epoch = 49 epsilon = 0.551 Policy net Loss = 1255.41
+epoch = 50 epsilon = 0.55 Policy net Loss = 1276.09
+epoch = 51 epsilon = 0.549 Policy net Loss = 1232.64
+epoch = 52 epsilon = 0.548 Policy net Loss = 1286.16
+epoch = 53 epsilon = 0.547 Policy net Loss = 1267.03
+epoch = 54 epsilon = 0.546 Policy net Loss = 1198.56
+epoch = 55 epsilon = 0.545 Policy net Loss = 1169.63
+epoch = 56 epsilon = 0.544 Policy net Loss = 1232.96
+epoch = 57 epsilon = 0.543 Policy net Loss = 1284.05
+epoch = 58 epsilon = 0.542 Policy net Loss = 1252.89
+epoch = 59 epsilon = 0.541 Policy net Loss = 1279.34
+epoch = 60 epsilon = 0.54 Policy net Loss = 1282.76
+epoch = 61 epsilon = 0.539 Policy net Loss = 1211.07
+epoch = 62 epsilon = 0.538 Policy net Loss = 1238.99
+epoch = 63 epsilon = 0.537 Policy net Loss = 1234.96
+epoch = 64 epsilon = 0.536 Policy net Loss = 1262.31
+epoch = 65 epsilon = 0.535 Policy net Loss = 1286.29
+epoch = 66 epsilon = 0.534 Policy net Loss = 1349.21
+epoch = 67 epsilon = 0.533 Policy net Loss = 1346.92
+epoch = 68 epsilon = 0.532 Policy net Loss = 1242.83
+epoch = 69 epsilon = 0.531 Policy net Loss = 1294.02
+epoch = 70 epsilon = 0.53 Policy net Loss = 1229.79
+epoch = 71 epsilon = 0.529 Policy net Loss = 1256.63
+epoch = 72 epsilon = 0.528 Policy net Loss = 1280.16
+epoch = 73 epsilon = 0.527 Policy net Loss = 1216.54
+epoch = 74 epsilon = 0.526 Policy net Loss = 1252.27
+epoch = 75 epsilon = 0.525 Policy net Loss = 1275.49
+epoch = 76 epsilon = 0.524 Policy net Loss = 1194.5
+epoch = 77 epsilon = 0.523 Policy net Loss = 1245.5
+epoch = 78 epsilon = 0.522 Policy net Loss = 1193.39
+epoch = 79 epsilon = 0.521 Policy net Loss = 1207.55
+epoch = 80 epsilon = 0.52 Policy net Loss = 1179.4
+epoch = 81 epsilon = 0.519 Policy net Loss = 1211.26
+epoch = 82 epsilon = 0.518 Policy net Loss = 1215.67
+epoch = 83 epsilon = 0.517 Policy net Loss = 1216.66
+epoch = 84 epsilon = 0.516 Policy net Loss = 1255.18
+epoch = 85 epsilon = 0.515 Policy net Loss = 1242.34
+epoch = 86 epsilon = 0.514 Policy net Loss = 1204.36
+epoch = 87 epsilon = 0.513 Policy net Loss = 1206.26
+epoch = 88 epsilon = 0.512 Policy net Loss = 1238.65
+epoch = 89 epsilon = 0.511 Policy net Loss = 1183.05
+epoch = 90 epsilon = 0.51 Policy net Loss = 1201.54
+epoch = 91 epsilon = 0.509 Policy net Loss = 1226.73
+epoch = 92 epsilon = 0.508 Policy net Loss = 1201.19
+epoch = 93 epsilon = 0.507 Policy net Loss = 1221.06
+epoch = 94 epsilon = 0.506 Policy net Loss = 1212.49
+epoch = 95 epsilon = 0.505 Policy net Loss = 1239.16
+epoch = 96 epsilon = 0.504 Policy net Loss = 1245.67
+epoch = 97 epsilon = 0.503 Policy net Loss = 1175.41
+epoch = 98 epsilon = 0.502 Policy net Loss = 1187.9
+epoch = 99 epsilon = 0.501 Policy net Loss = 1208.16
+epoch = 100 epsilon = 0.5 Policy net Loss = 1171.4
+epoch = 101 epsilon = 0.499 Policy net Loss = 1212.51
+epoch = 102 epsilon = 0.498 Policy net Loss = 1255.12
+epoch = 103 epsilon = 0.497 Policy net Loss = 1141.15
+epoch = 104 epsilon = 0.496 Policy net Loss = 1199.77
+epoch = 105 epsilon = 0.495 Policy net Loss = 1173.07
+epoch = 106 epsilon = 0.494 Policy net Loss = 1251.64
+epoch = 107 epsilon = 0.493 Policy net Loss = 1265.71
+epoch = 108 epsilon = 0.492 Policy net Loss = 1231.24
+epoch = 109 epsilon = 0.491 Policy net Loss = 1249.42
+epoch = 110 epsilon = 0.49 Policy net Loss = 1229.22
+epoch = 111 epsilon = 0.489 Policy net Loss = 1251.81
+epoch = 112 epsilon = 0.488 Policy net Loss = 1252.58
+epoch = 113 epsilon = 0.487 Policy net Loss = 1214.57
+epoch = 114 epsilon = 0.486 Policy net Loss = 1208.53
