@@ -499,7 +499,7 @@ int main()
                     if (term_state != NOW_TERMINAL_STATE)
                     {
                         float exploring_dice = (float)(rand() % 65535) / 65536; // Through a fair dice. Random value 0..1.0 range
-                        if (exploring_dice < epsilon || run_only_random_actions_for_next_scene == 1)
+                        if (exploring_dice < epsilon)
                         {
                             // Choose dice action (Exploration mode)
                             gameObj1.move_up = do_dice_action();
