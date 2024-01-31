@@ -870,7 +870,8 @@ int main()
                     // Set target values
                     for (int i = 0; i < nr_of_actions; i++)
                     {
-                        if (replay_buffer[g_replay_cnt][frame_g + 1].selected_action == i)
+                      //if (replay_buffer[g_replay_cnt][frame_g + 1].selected_action == i)//what the next action decision was
+                        if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
                         {
                             policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g + 1].rewards_Q; // Train towards rewards_Q value
                         }
@@ -882,6 +883,7 @@ int main()
                 }
                 else
                 {
+                    //Now in terminal state
                     int inp_n_idx = 0;
                     for (int f = 0; f < nr_frames_strobed; f++)
                     {
