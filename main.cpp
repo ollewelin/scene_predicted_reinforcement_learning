@@ -259,7 +259,8 @@ int main()
     const double derating_epsilon = 0.001 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
-    int target_policy_on_next_action_selection = 0;//0= Normal set policy target value with its rewards to the present decition. 1= Set target value to the future desition 
+    int target_policy_on_next_action_selection = 1;//0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition 
+    const int target_policy_use_f_p_1_pixel_from_predict_net = 0;//0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning. 
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -355,7 +356,7 @@ int main()
         file << "derating_epsilon = " << derating_epsilon << endl;
         file << "gamma_decay = " << gamma_decay << endl;
         file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
-
+        file << "target_policy_use_f_p_1_pixel_from_predict_net = " << target_policy_use_f_p_1_pixel_from_predict_net << endl;
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
@@ -803,68 +804,87 @@ int main()
 
                 if (term_state != NOW_TERMINAL_STATE)
                 {
-
-                    //********** Forward next predict net ********
-                    int inp_n_idx = 0;
-
-                    // Load input frame video from replay memory
-                    for (int f = 0; f < nr_frames_strobed; f++)
+                    if (target_policy_use_f_p_1_pixel_from_predict_net == 1)
                     {
-                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                        // Do same methode as during game play
+                        //********** Forward next predict net ********
+                        int inp_n_idx = 0;
+
+                        // Load input frame video from replay memory
+                        for (int f = 0; f < nr_frames_strobed; f++)
                         {
-                            double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                            //  Load the prediction network with input frame video from replay memory
-                            next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                            inp_n_idx++;
-                        }
-                    }
-                    // Load taken action from replay memory
-                    for (int i = 0; i < nr_of_actions; i++)
-                    {
-                        double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
-                        next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
-                    }
-                    next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-                    //*******************************************
-
-                    inp_n_idx = 0;
-                    for (int f = 0; f < nr_frames_strobed; f++)
-                    {
-                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                        {
-                            double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                            if (skip_scene_predicotr_only_for_benchmarking == 0)
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                             {
-                                // use the prediction network stadegy
-                                int first_frame_size = pixel_width * pixel_height;
-                                if (pix_idx > first_frame_size)
+                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                //  Load the prediction network with input frame video from replay memory
+                                next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                inp_n_idx++;
+                            }
+                        }
+                        // Load taken action from replay memory
+                        for (int i = 0; i < nr_of_actions; i++)
+                        {
+                            double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
+                            next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                        }
+                        next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
+                        //*******************************************
+
+                        inp_n_idx = 0;
+                        for (int f = 0; f < nr_frames_strobed; f++)
+                        {
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                            {
+                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                if (skip_scene_predicotr_only_for_benchmarking == 0)
                                 {
-                                    // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
-                                    // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
-                                    // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
-                                    // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                    policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                    // use the prediction network stadegy
+                                    int first_frame_size = pixel_width * pixel_height;
+                                    if (pix_idx > first_frame_size)
+                                    {
+                                        // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                        // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
+                                        // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                        // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                        policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                    }
+                                }
+                                else
+                                {
+                                    // Bench mark methode
+                                    // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
+                                    policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                }
+                                inp_n_idx++;
+                            }
+                        }
+
+                        if (skip_scene_predicotr_only_for_benchmarking == 0)
+                        {
+                            // Insert predicted scene to policy network
+                            for (int row = 0; row < pixel_height; row++)
+                            {
+                                for (int col = 0; col < pixel_width; col++)
+                                {
+                                    double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
+                                    policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
                                 }
                             }
-                            else
-                            {
-                                // Bench mark methode
-                                // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
-                            }
-                            inp_n_idx++;
                         }
                     }
-
-                    if (skip_scene_predicotr_only_for_benchmarking == 0)
+                    else
                     {
-                        // Insert predicted scene to policy network
-                        for (int row = 0; row < pixel_height; row++)
+                        //Load all f2,f1,f0,f+1 all from replay memory only (Not use next scene prediction net for produce the f+1 frame instead use f+1 from replay memory)
+                        int inp_n_idx = 0;
+                        // Load input frame video from replay memory
+                        for (int f = 0; f < nr_frames_strobed; f++)
                         {
-                            for (int col = 0; col < pixel_width; col++)
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                             {
-                                double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
-                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
+                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g + 1 - nr_frames_strobed + f].video_frame[pix_idx];
+                                //  Load the policy_fc_net network with input frame video from replay memory
+                                policy_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                inp_n_idx++;
                             }
                         }
                     }
