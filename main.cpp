@@ -31,6 +31,7 @@ const int pixel_height = 35; /// The input data pixel height, note game_Width = 
 const int pixel_width = 35;  /// The input data pixel width, note game_Height = 200
 const int nr_of_actions = 3;
 
+
 int do_dice_action(void)
 {
     float max_decision = 0.0f;
@@ -258,6 +259,7 @@ int main()
     const double derating_epsilon = 0.001 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
+    int target_policy_on_next_action_selection = 0;//0= Normal set policy target value with its rewards to the present decition. 1= Set target value to the future desition 
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -292,6 +294,7 @@ int main()
     else
     {
         skip_scene_predicotr_only_for_benchmarking = 1;
+        target_policy_on_next_action_selection = 0;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
         cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
         cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
@@ -351,6 +354,7 @@ int main()
         file << "g_replay_size = " << g_replay_size << endl;
         file << "derating_epsilon = " << derating_epsilon << endl;
         file << "gamma_decay = " << gamma_decay << endl;
+        file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
 
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
@@ -870,8 +874,8 @@ int main()
                     // Set target values
                     for (int i = 0; i < nr_of_actions; i++)
                     {
-                      //if (replay_buffer[g_replay_cnt][frame_g + 1].selected_action == i)//what the next action decision was
-                        if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
+                      //if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
+                        if (replay_buffer[g_replay_cnt][frame_g + target_policy_on_next_action_selection].selected_action == i)
                         {
                             policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g + 1].rewards_Q; // Train towards rewards_Q value
                         }
