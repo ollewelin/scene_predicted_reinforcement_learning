@@ -256,11 +256,12 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.001 * g_replay_size / 1000;
+    const double derating_epsilon = 0.0035 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
     int target_policy_on_next_action_selection = 1;//0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition 
     const int target_policy_use_f_p_1_pixel_from_predict_net = 0;//0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning. 
+    const int target_off_set_to_output_itself = 1;//1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -357,6 +358,7 @@ int main()
         file << "gamma_decay = " << gamma_decay << endl;
         file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
         file << "target_policy_use_f_p_1_pixel_from_predict_net = " << target_policy_use_f_p_1_pixel_from_predict_net << endl;
+        file << "target_off_set_to_output_itself = " << target_off_set_to_output_itself << endl;
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
@@ -901,7 +903,14 @@ int main()
                         }
                         else
                         {
-                            policy_fc_net.target_layer[i] = policy_target_off; // OFF
+                            if(target_off_set_to_output_itself == 1)
+                            {
+                                policy_fc_net.target_layer[i] = policy_fc_net.target_layer[i]; // OFF
+                            }
+                            else
+                            {
+                                policy_fc_net.target_layer[i] = policy_target_off; // OFF
+                            }
                         }
                     }
                 }
