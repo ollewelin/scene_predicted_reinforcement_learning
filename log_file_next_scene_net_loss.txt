@@ -14,119 +14,147 @@ next_scene_fc_net.momentum = 0.1
 policy_fc_net.learning_rate = 0.005
 policy_fc_net.momentum = 0.9
 g_replay_size = 1000
-derating_epsilon = 0.001
+derating_epsilon = 0.0035
 gamma_decay = 0.85
-
-epoch = 2 scene predictiable net Loss = 105089
-epoch = 3 scene predictiable net Loss = 105031
-epoch = 4 scene predictiable net Loss = 104675
-epoch = 5 scene predictiable net Loss = 104911
-epoch = 6 scene predictiable net Loss = 104595
-epoch = 7 scene predictiable net Loss = 104576
-epoch = 8 scene predictiable net Loss = 104727
-epoch = 9 scene predictiable net Loss = 105113
-epoch = 10 scene predictiable net Loss = 104856
-epoch = 11 scene predictiable net Loss = 104640
-epoch = 12 scene predictiable net Loss = 104913
-epoch = 13 scene predictiable net Loss = 104683
-epoch = 14 scene predictiable net Loss = 104684
-epoch = 15 scene predictiable net Loss = 104781
-epoch = 16 scene predictiable net Loss = 104829
-epoch = 17 scene predictiable net Loss = 104979
-epoch = 18 scene predictiable net Loss = 104357
-epoch = 19 scene predictiable net Loss = 104648
-epoch = 20 scene predictiable net Loss = 104603
-epoch = 21 scene predictiable net Loss = 104771
-epoch = 22 scene predictiable net Loss = 104425
-epoch = 23 scene predictiable net Loss = 104726
-epoch = 24 scene predictiable net Loss = 104278
-epoch = 25 scene predictiable net Loss = 104494
-epoch = 26 scene predictiable net Loss = 104595
-epoch = 27 scene predictiable net Loss = 104072
-epoch = 28 scene predictiable net Loss = 104405
-epoch = 29 scene predictiable net Loss = 104300
-epoch = 30 scene predictiable net Loss = 104125
-epoch = 31 scene predictiable net Loss = 104464
-epoch = 32 scene predictiable net Loss = 104534
-epoch = 33 scene predictiable net Loss = 104238
-epoch = 34 scene predictiable net Loss = 104735
-epoch = 35 scene predictiable net Loss = 104366
-epoch = 36 scene predictiable net Loss = 104578
-epoch = 37 scene predictiable net Loss = 104008
-epoch = 38 scene predictiable net Loss = 104494
-epoch = 39 scene predictiable net Loss = 104448
-epoch = 40 scene predictiable net Loss = 104468
-epoch = 41 scene predictiable net Loss = 104359
-epoch = 42 scene predictiable net Loss = 104565
-epoch = 43 scene predictiable net Loss = 104162
-epoch = 44 scene predictiable net Loss = 104615
-epoch = 45 scene predictiable net Loss = 104452
-epoch = 46 scene predictiable net Loss = 103810
-epoch = 47 scene predictiable net Loss = 103978
-epoch = 48 scene predictiable net Loss = 104073
-epoch = 49 scene predictiable net Loss = 104025
-epoch = 50 scene predictiable net Loss = 104186
-epoch = 51 scene predictiable net Loss = 103591
-epoch = 52 scene predictiable net Loss = 104029
-epoch = 53 scene predictiable net Loss = 103780
-epoch = 54 scene predictiable net Loss = 104028
-epoch = 55 scene predictiable net Loss = 104087
-epoch = 56 scene predictiable net Loss = 103829
-epoch = 57 scene predictiable net Loss = 103739
-epoch = 58 scene predictiable net Loss = 103968
-epoch = 59 scene predictiable net Loss = 103620
-epoch = 60 scene predictiable net Loss = 103872
-epoch = 61 scene predictiable net Loss = 103878
-epoch = 62 scene predictiable net Loss = 104038
-epoch = 63 scene predictiable net Loss = 104287
-epoch = 64 scene predictiable net Loss = 103620
-epoch = 65 scene predictiable net Loss = 103804
-epoch = 66 scene predictiable net Loss = 103702
-epoch = 67 scene predictiable net Loss = 104128
-epoch = 68 scene predictiable net Loss = 103551
-epoch = 69 scene predictiable net Loss = 103941
-epoch = 70 scene predictiable net Loss = 104046
-epoch = 71 scene predictiable net Loss = 103890
-epoch = 72 scene predictiable net Loss = 103895
-epoch = 73 scene predictiable net Loss = 103815
-epoch = 74 scene predictiable net Loss = 103923
-epoch = 75 scene predictiable net Loss = 103883
-epoch = 76 scene predictiable net Loss = 103868
-epoch = 77 scene predictiable net Loss = 103533
-epoch = 78 scene predictiable net Loss = 103442
-epoch = 79 scene predictiable net Loss = 103509
-epoch = 80 scene predictiable net Loss = 103569
-epoch = 81 scene predictiable net Loss = 103397
-epoch = 82 scene predictiable net Loss = 103988
-epoch = 83 scene predictiable net Loss = 103364
-epoch = 84 scene predictiable net Loss = 103225
-epoch = 85 scene predictiable net Loss = 103486
-epoch = 86 scene predictiable net Loss = 103323
-epoch = 87 scene predictiable net Loss = 103570
-epoch = 88 scene predictiable net Loss = 103664
-epoch = 89 scene predictiable net Loss = 103428
-epoch = 90 scene predictiable net Loss = 103316
-epoch = 91 scene predictiable net Loss = 103458
-epoch = 92 scene predictiable net Loss = 103204
-epoch = 93 scene predictiable net Loss = 103363
-epoch = 94 scene predictiable net Loss = 103403
-epoch = 95 scene predictiable net Loss = 103283
-epoch = 96 scene predictiable net Loss = 103485
-epoch = 97 scene predictiable net Loss = 103359
-epoch = 98 scene predictiable net Loss = 103247
-epoch = 99 scene predictiable net Loss = 103428
-epoch = 100 scene predictiable net Loss = 103080
-epoch = 101 scene predictiable net Loss = 103268
-epoch = 102 scene predictiable net Loss = 103260
-epoch = 103 scene predictiable net Loss = 103220
-epoch = 104 scene predictiable net Loss = 103011
-epoch = 105 scene predictiable net Loss = 103207
-epoch = 106 scene predictiable net Loss = 103281
-epoch = 107 scene predictiable net Loss = 102963
-epoch = 108 scene predictiable net Loss = 103691
-epoch = 109 scene predictiable net Loss = 103511
-epoch = 110 scene predictiable net Loss = 103084
-epoch = 111 scene predictiable net Loss = 102829
-epoch = 112 scene predictiable net Loss = 102862
-epoch = 113 scene predictiable net Loss = 102863
-epoch = 114 scene predictiable net Loss = 102932
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_1_pixel_from_predict_net = 0
+target_off_set_to_output_itself = 1
+epoch = 0 scene predictiable net Loss = 98232.9
+epoch = 1 scene predictiable net Loss = 96257.5
+epoch = 2 scene predictiable net Loss = 93834.9
+epoch = 3 scene predictiable net Loss = 91074.8
+epoch = 4 scene predictiable net Loss = 92043.1
+epoch = 5 scene predictiable net Loss = 90853.4
+epoch = 6 scene predictiable net Loss = 91358.3
+epoch = 7 scene predictiable net Loss = 90039.5
+epoch = 8 scene predictiable net Loss = 89555.1
+epoch = 9 scene predictiable net Loss = 89292.1
+epoch = 10 scene predictiable net Loss = 88772.5
+epoch = 11 scene predictiable net Loss = 88925.3
+epoch = 12 scene predictiable net Loss = 88625
+epoch = 13 scene predictiable net Loss = 87807.6
+epoch = 14 scene predictiable net Loss = 86989.5
+epoch = 15 scene predictiable net Loss = 88056.4
+epoch = 16 scene predictiable net Loss = 86682.6
+epoch = 17 scene predictiable net Loss = 86075.6
+epoch = 18 scene predictiable net Loss = 86156.1
+epoch = 19 scene predictiable net Loss = 85305.5
+epoch = 20 scene predictiable net Loss = 84802
+epoch = 21 scene predictiable net Loss = 84295
+epoch = 22 scene predictiable net Loss = 84142.4
+epoch = 23 scene predictiable net Loss = 83811
+epoch = 24 scene predictiable net Loss = 83458.8
+epoch = 25 scene predictiable net Loss = 83396
+epoch = 26 scene predictiable net Loss = 82544.7
+epoch = 27 scene predictiable net Loss = 82361.4
+epoch = 28 scene predictiable net Loss = 81690.1
+epoch = 29 scene predictiable net Loss = 81369.2
+epoch = 30 scene predictiable net Loss = 80427.4
+epoch = 31 scene predictiable net Loss = 81233.1
+epoch = 32 scene predictiable net Loss = 80359.9
+epoch = 33 scene predictiable net Loss = 80088.8
+epoch = 34 scene predictiable net Loss = 79227.9
+epoch = 35 scene predictiable net Loss = 80242.7
+epoch = 36 scene predictiable net Loss = 78903
+epoch = 37 scene predictiable net Loss = 78251.7
+epoch = 38 scene predictiable net Loss = 78622
+epoch = 39 scene predictiable net Loss = 77135
+epoch = 40 scene predictiable net Loss = 77339.3
+epoch = 41 scene predictiable net Loss = 76889.6
+epoch = 42 scene predictiable net Loss = 76012.8
+epoch = 43 scene predictiable net Loss = 76980.2
+epoch = 44 scene predictiable net Loss = 76858.2
+epoch = 45 scene predictiable net Loss = 76583.1
+epoch = 46 scene predictiable net Loss = 76225.6
+epoch = 47 scene predictiable net Loss = 75554
+epoch = 48 scene predictiable net Loss = 73780.5
+epoch = 49 scene predictiable net Loss = 74714.3
+epoch = 50 scene predictiable net Loss = 74273
+epoch = 51 scene predictiable net Loss = 73207.3
+epoch = 52 scene predictiable net Loss = 73290
+epoch = 53 scene predictiable net Loss = 71379.7
+epoch = 54 scene predictiable net Loss = 70898.3
+epoch = 55 scene predictiable net Loss = 70980.2
+epoch = 56 scene predictiable net Loss = 70946.4
+epoch = 57 scene predictiable net Loss = 70533.4
+epoch = 58 scene predictiable net Loss = 70288.6
+epoch = 59 scene predictiable net Loss = 69735.6
+epoch = 60 scene predictiable net Loss = 68123.8
+epoch = 61 scene predictiable net Loss = 69539.1
+epoch = 62 scene predictiable net Loss = 69511.9
+epoch = 63 scene predictiable net Loss = 67099.4
+epoch = 64 scene predictiable net Loss = 68497.5
+epoch = 65 scene predictiable net Loss = 65271.6
+epoch = 66 scene predictiable net Loss = 68987
+epoch = 67 scene predictiable net Loss = 66454.8
+epoch = 68 scene predictiable net Loss = 66638.8
+epoch = 69 scene predictiable net Loss = 65654.8
+epoch = 70 scene predictiable net Loss = 65056.2
+epoch = 71 scene predictiable net Loss = 64149.8
+epoch = 72 scene predictiable net Loss = 64655
+epoch = 73 scene predictiable net Loss = 62179.1
+epoch = 74 scene predictiable net Loss = 63323.5
+epoch = 75 scene predictiable net Loss = 62107
+epoch = 76 scene predictiable net Loss = 64408.2
+epoch = 77 scene predictiable net Loss = 62440.1
+epoch = 78 scene predictiable net Loss = 61494
+epoch = 79 scene predictiable net Loss = 62439.1
+epoch = 80 scene predictiable net Loss = 62494.9
+epoch = 81 scene predictiable net Loss = 62186.2
+epoch = 82 scene predictiable net Loss = 60672.4
+epoch = 83 scene predictiable net Loss = 60861.4
+epoch = 84 scene predictiable net Loss = 59871.5
+epoch = 85 scene predictiable net Loss = 58257.2
+epoch = 86 scene predictiable net Loss = 59515.7
+epoch = 87 scene predictiable net Loss = 58338.8
+epoch = 88 scene predictiable net Loss = 56619.9
+epoch = 89 scene predictiable net Loss = 58056.2
+epoch = 90 scene predictiable net Loss = 58858.7
+epoch = 91 scene predictiable net Loss = 56449.9
+epoch = 92 scene predictiable net Loss = 57792.1
+epoch = 93 scene predictiable net Loss = 54549.8
+epoch = 94 scene predictiable net Loss = 54480.2
+epoch = 95 scene predictiable net Loss = 54088
+epoch = 96 scene predictiable net Loss = 53644.5
+epoch = 97 scene predictiable net Loss = 53437
+epoch = 98 scene predictiable net Loss = 53510.3
+epoch = 99 scene predictiable net Loss = 55686
+epoch = 100 scene predictiable net Loss = 55621.5
+epoch = 101 scene predictiable net Loss = 53881.7
+epoch = 102 scene predictiable net Loss = 52879.8
+epoch = 103 scene predictiable net Loss = 51964.9
+epoch = 104 scene predictiable net Loss = 52267.8
+epoch = 105 scene predictiable net Loss = 52552.7
+epoch = 106 scene predictiable net Loss = 51463.2
+epoch = 107 scene predictiable net Loss = 49791
+epoch = 108 scene predictiable net Loss = 49973.9
+epoch = 109 scene predictiable net Loss = 50756.6
+epoch = 110 scene predictiable net Loss = 50065.1
+epoch = 111 scene predictiable net Loss = 48268.1
+epoch = 112 scene predictiable net Loss = 49260.3
+epoch = 113 scene predictiable net Loss = 48879.5
+epoch = 114 scene predictiable net Loss = 46897.5
+epoch = 115 scene predictiable net Loss = 47995.5
+epoch = 116 scene predictiable net Loss = 47120.4
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.005
+policy_fc_net.momentum = 0.9
+g_replay_size = 40
+derating_epsilon = 0.0001
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 0
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
