@@ -1,0 +1,155 @@
+%----------------------------------------------------------
+%scene_predictiable_net_Loss plot
+% Read data from the log file
+fid = fopen("output_next_scene.txt", "r");
+data = textscan(fid, "%f %f", "headerlines", 1);
+fclose(fid);
+%epoch scene_predictiable_net_Loss
+epoch = data{1};  % Extract the first column (epoch)
+scene_predictiable_net_Loss = data{2};  % Extract the second column 
+
+
+% Create a new figure
+figure;
+
+plot(epoch, scene_predictiable_net_Loss, 'b.-', 'LineWidth', 1.5);  % Blue line
+
+% Add labels and title
+xlabel("Epoch");
+ylabel("Values");
+title("Data Trends vs. Epoch");
+
+% Show grid
+grid on;
+
+% Legend
+legend("scene_predictiable_net_Loss");
+
+% Release hold
+hold off;
+
+
+% Legend
+legend([h1], "scene_predictiable_net_Loss");
+
+% Release hold
+hold off;
+
+%----------------------------------------------------------
+%Policy_net_Loss plot
+% Read data from the log file
+fid = fopen("output_policy.txt", "r");
+data = textscan(fid, "%f %f %f", "headerlines", 1);
+fclose(fid);
+%epoch epsilon Policy_net_Loss
+epoch = data{1};  % Extract the first column (epoch)
+epsilon = data{2};  % Extract the second column 
+Policy_net_Loss = data{3};  % Extract the third column
+
+
+% Create a new figure
+figure;
+
+plot(epoch, Policy_net_Loss, 'b.-', 'LineWidth', 1.5);  % Blue line
+
+% Add labels and title
+xlabel("Epoch");
+ylabel("Values");
+title("Data Trends vs. Epoch");
+
+% Show grid
+grid on;
+
+% Legend
+legend("Policy_net_Loss");
+
+% Release hold
+hold off;
+
+
+% Legend
+legend([h1], "Policy_net_Loss");
+
+% Release hold
+hold off;
+
+
+%----------------------------------------------------------
+%Epsilon plot
+
+% Read data from the log file
+fid = fopen("output_policy.txt", "r");
+data = textscan(fid, "%f %f %f", "headerlines", 1);
+fclose(fid);
+%epoch epsilon Policy_net_Loss
+epoch = data{1};  % Extract the first column (epoch)
+epsilon = data{2};  % Extract the second column 
+Policy_net_Loss = data{3};  % Extract the third column
+
+
+% Create a new figure
+figure;
+
+plot(epoch, epsilon, 'b.-', 'LineWidth', 1.5);  % Blue line
+hold on;
+
+% Add labels and title
+xlabel("Epoch");
+ylabel("Values");
+title("Data Trends vs. Epoch");
+
+% Show grid
+grid on;
+
+% Legend
+legend("Epsilon");
+
+% Release hold
+hold off;
+
+
+% Legend
+legend([h1], "Epsilon");
+
+% Release hold
+hold off;
+
+%----------------------------------------------------------
+% Read data from the log file
+fid = fopen("output_win.txt", "r");
+data = textscan(fid, "%f %f %f %f", "headerlines", 1);
+fclose(fid);
+%epoch Now_win_probablilty Old_win_probablilty total_plays
+epoch = data{1};  % Extract the first column (epoch)
+Now_win_probablilty = data{2};  % Extract the second column 
+Old_win_probablilty = data{3};  % Extract the third column
+
+% Create a new figure
+figure;
+
+plot(epoch, Now_win_probablilty, 'g.-', 'LineWidth', 1.5);  % Green line
+hold on;
+plot(epoch, Old_win_probablilty, 'r.-', 'LineWidth', 1.5);  % Red line
+
+% Add labels and title
+xlabel("Epoch");
+ylabel("Values");
+title("Data Trends vs. Epoch");
+
+% Show grid
+grid on;
+
+% Legend
+legend("Now_win_probablilty", "Last Win Probability");
+
+% Release hold
+hold off;
+
+
+% Legend
+legend([h1, h2], "Now_win_probablilty", "Last Win Probability");
+
+% Release hold
+hold off;
+
+
