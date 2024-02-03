@@ -1,0 +1,40 @@
+% Read data from the log file
+fid = fopen("log.txt", "r");
+data = textscan(fid, "%f %f %f %f %f", "headerlines", 1);
+fclose(fid);
+
+epoch = data{1};  % Extract the first column (epoch)
+epsilon = data{2};  % Extract the second column (epsilon)
+policyLoss = data{3};  % Extract the third column (Policy_net_Loss)
+lastWinProbability = data{4};  % Extract the fourth column (last_win_probablilty)
+
+% Create a new figure
+figure;
+
+% Plot epsilon, policyLoss, and lastWinProbability
+plot(epoch, epsilon, 'b.-', 'LineWidth', 1.5);  % Blue line
+hold on;
+plot(epoch, policyLoss, 'g.-', 'LineWidth', 1.5);  % Green line
+plot(epoch, lastWinProbability, 'r.-', 'LineWidth', 1.5);  % Red line
+
+% Add labels and title
+xlabel("Epoch");
+ylabel("Values");
+title("Data Trends vs. Epoch");
+
+% Show grid
+grid on;
+
+% Legend
+legend("Epsilon", "Policy_net_Loss", "Last Win Probability");
+
+% Release hold
+hold off;
+
+
+% Legend
+legend([h1, h2, h3, h4], "Epsilon", "Policy_net_Loss", "Last Win Probability");
+
+% Release hold
+hold off;
+
