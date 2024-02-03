@@ -152,8 +152,8 @@ int main()
     policy_fc_net.activation_function_mode = 2;
     policy_fc_net.force_last_activation_function_mode = 3;
     policy_fc_net.use_skip_connect_mode = 0;
-    policy_fc_net.use_dropouts = 0;
-    policy_fc_net.dropout_proportion = 0.0;
+    policy_fc_net.use_dropouts = 1;
+    policy_fc_net.dropout_proportion = 0.35;
     policy_fc_net.clip_deriv = 0;
 
     const int next_scene_hid_layers = 3;
@@ -246,7 +246,7 @@ int main()
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
     policy_fc_net.learning_rate = 0.005;
-    policy_fc_net.momentum = 0.9; //
+    policy_fc_net.momentum = 0.25; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -373,6 +373,9 @@ int main()
         file << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
         file << "target_off_set_to_output_itself = " << target_off_set_to_output_itself << endl;
         file << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
+        file << "policy_fc_net.use_dropouts =" << policy_fc_net.use_dropouts << endl;
+        file << "policy_fc_net.dropout_proportion = " << policy_fc_net.dropout_proportion << endl;
+
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
