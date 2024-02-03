@@ -78,7 +78,7 @@ int show_image = 0;
 int main()
 {
     int term_state = NORMAL_STATE;                      // 0 = N
-    int skip_scene_predicotr_only_for_benchmarking = 0; // set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
+    int skip_scene_predictor_only_for_benchmarking = 0; // set this to 1 to benchmaring with only use policy network like orderanry vanilla on policy reinforcemnat learning instead of dubble network with scenen predictor
     char answer;
     srand(static_cast<unsigned>(time(NULL))); // Seed the randomizer
     cout << "Scene predictor net and policy net. Dual net reinforcement learning game" << endl;
@@ -256,11 +256,11 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.05;
-    const double derating_epsilon = 0.0035 * g_replay_size / 1000;
+    const double derating_epsilon = 0.0025 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
     int target_policy_on_next_action_selection = 1;//0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition 
-    const int target_policy_use_f_p_1_pixel_from_predict_net = 0;//0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning. 
+    const int target_policy_use_f_p_2_pixel_from_predict_net = 0;//0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning. 
     const int target_off_set_to_output_itself = 1;//1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
@@ -283,23 +283,36 @@ int main()
         cout << " epsilon is now set to = " << epsilon << endl;
         warm_up_eps_nr = 0;
     }
+    int skip_traning_next_scenen = 0;
+    cout << "Do you want to train next scene network = Y/N " << endl;
+    cin >> answer;
+    if (answer == 'Y' || answer == 'y')
+    {
+        skip_traning_next_scenen = 0;
+    }
+    else
+    {
+        skip_traning_next_scenen = 1;
+    }
+    cout << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
+
     cout << "Do you want to use next scene network = Y/N " << endl;
     cin >> answer;
     if (answer == 'Y' || answer == 'y')
     {
-        skip_scene_predicotr_only_for_benchmarking = 0;
+        skip_scene_predictor_only_for_benchmarking = 0;
         cout << "************************************************************************************************" << endl;
         cout << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
-        cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+        cout << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
         cout << "************************************************************************************************" << endl;
     }
     else
     {
-        skip_scene_predicotr_only_for_benchmarking = 1;
+        skip_scene_predictor_only_for_benchmarking = 1;
         target_policy_on_next_action_selection = 0;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
         cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
-        cout << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+        cout << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
     }
 
@@ -324,18 +337,18 @@ int main()
             break;
         }
         std::ofstream file(log_filename, std::ios::app);
-        if (skip_scene_predicotr_only_for_benchmarking == 0)
+        if (skip_scene_predictor_only_for_benchmarking == 0)
         {
             file << "************************************************************************************************" << endl;
             file << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
-            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
             file << "************************************************************************************************" << endl;
         }
         else
         {
             file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
             file << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
-            file << "skip_scene_predicotr_only_for_benchmarking = " << skip_scene_predicotr_only_for_benchmarking << endl;
+            file << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
             file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
         }
 
@@ -357,8 +370,9 @@ int main()
         file << "derating_epsilon = " << derating_epsilon << endl;
         file << "gamma_decay = " << gamma_decay << endl;
         file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
-        file << "target_policy_use_f_p_1_pixel_from_predict_net = " << target_policy_use_f_p_1_pixel_from_predict_net << endl;
+        file << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
         file << "target_off_set_to_output_itself = " << target_off_set_to_output_itself << endl;
+        file << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
@@ -436,14 +450,14 @@ int main()
     const int max_nr_epochs = 1000000;
     for (int epoch = 0; epoch < max_nr_epochs; epoch++)
     {
-        if (run_only_random_actions_for_next_scene == 1)
+        if (run_only_random_actions_for_next_scene == 1 || skip_traning_next_scenen == 1)
         {
             run_only_random_actions_for_next_scene = 0; // Toggle
             cout << "** Run policy episode and load replay memory with data for traning policy network **********" << endl;
         }
         else
         {
-            if (skip_scene_predicotr_only_for_benchmarking == 0)
+            if (skip_scene_predictor_only_for_benchmarking == 0)
             {
                 run_only_random_actions_for_next_scene = 1; // Toggle
                 cout << "** Run 100% random action to load replay memory with data for next scene net traning later **********" << endl;
@@ -524,7 +538,7 @@ int main()
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
                                     double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                    if (skip_scene_predicotr_only_for_benchmarking == 0)
+                                    if (skip_scene_predictor_only_for_benchmarking == 0)
                                     {
                                         // use the prediction network stadegy
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
@@ -552,7 +566,7 @@ int main()
                             int which_next_frame_have_stongest_action = 0;
                             for (int act = 0; act < nr_of_actions; act++)
                             {
-                                if (skip_scene_predicotr_only_for_benchmarking == 0) // use the prediction network stadegy
+                                if (skip_scene_predictor_only_for_benchmarking == 0) // use the prediction network stadegy
                                 {
                                     // Loop thorugh all possible actont and try to predict next scene on each taken action.
                                     for (int i = 0; i < nr_of_actions; i++)
@@ -579,7 +593,7 @@ int main()
                                 policy_fc_net.forward_pass();
                                 // int what_act_was_stongest_i_debug = 0;
                                 // double debug_v = 0;
-                                if (skip_scene_predicotr_only_for_benchmarking == 0) // Normal mode
+                                if (skip_scene_predictor_only_for_benchmarking == 0) // Normal mode
                                 {
                                     for (int i = 0; i < nr_of_actions; i++)
                                     {
@@ -806,7 +820,7 @@ int main()
 
                 if (term_state != NOW_TERMINAL_STATE)
                 {
-                    if (target_policy_use_f_p_1_pixel_from_predict_net == 1)
+                    if (target_policy_use_f_p_2_pixel_from_predict_net == 1)
                     {
                         // Do same methode as during game play
                         //********** Forward next predict net ********
@@ -838,7 +852,7 @@ int main()
                             for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                             {
                                 double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                if (skip_scene_predicotr_only_for_benchmarking == 0)
+                                if (skip_scene_predictor_only_for_benchmarking == 0)
                                 {
                                     // use the prediction network stadegy
                                     int first_frame_size = pixel_width * pixel_height;
@@ -861,7 +875,7 @@ int main()
                             }
                         }
 
-                        if (skip_scene_predicotr_only_for_benchmarking == 0)
+                        if (skip_scene_predictor_only_for_benchmarking == 0)
                         {
                             // Insert predicted scene to policy network
                             for (int row = 0; row < pixel_height; row++)
@@ -897,9 +911,14 @@ int main()
                     for (int i = 0; i < nr_of_actions; i++)
                     {
                       //if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
+                        int get_rewards_from_two_step_future_state_nr = frame_g + 2;
+                        if(get_rewards_from_two_step_future_state_nr > gameObj1.nr_of_frames - 1)
+                        {
+                            get_rewards_from_two_step_future_state_nr = gameObj1.nr_of_frames - 1;// Limit index to the terminal state 
+                        }
                         if (replay_buffer[g_replay_cnt][frame_g + target_policy_on_next_action_selection].selected_action == i)
                         {
-                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g + 1].rewards_Q; // Train towards rewards_Q value
+                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][get_rewards_from_two_step_future_state_nr].rewards_Q; // Train towards rewards_Q value 2 step in future state
                         }
                         else
                         {
@@ -957,7 +976,7 @@ int main()
                             mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-2)) ] + 0.5;
                         }
                     }
-                    if(skip_scene_predicotr_only_for_benchmarking == 0)
+                    if(skip_scene_predictor_only_for_benchmarking == 0)
                     {
                         imshow("next frame f+1 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
                         imshow("pressent frame f0 policy net first layer weights", mat_f0_policy_net_first_layer_view);
@@ -978,7 +997,7 @@ int main()
             file << "epoch = " << epoch << " epsilon = " << epsilon << " Policy net Loss = " << policy_fc_net.loss_A << endl;
             file.close();
 
-            if (skip_scene_predicotr_only_for_benchmarking == 1)
+            if (skip_scene_predictor_only_for_benchmarking == 1)
             {
                 cout << "***************************************************************************************************************************" << endl;
                 cout << "******** Benchmark mode evaluation mode. Skip Training the next scene predictiable network. Next scenen NOT USED **********" << endl;
@@ -987,7 +1006,7 @@ int main()
         }
         else
         {
-            if (skip_scene_predicotr_only_for_benchmarking == 0)
+            if (skip_scene_predictor_only_for_benchmarking == 0)
             {
                 cout << "*********************************************************************************************************************************" << endl;
                 cout << "******** Training the next scene predictiable network exclusive on random dice actions on replay from Epoch number = " << epoch << " **********" << endl;
