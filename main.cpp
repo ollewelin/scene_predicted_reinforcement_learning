@@ -12,7 +12,7 @@ using namespace std;
 #include <cstdlib>
 #include <chrono>
 #include <opencv2/opencv.hpp>
-//#include <opencv2/plot.hpp>
+// #include <opencv2/plot.hpp>
 #include <opencv2/core/core.hpp> // Basic OpenCV structures (cv::Mat, Scalar)
 #include <iomanip>               // for std::setprecision
 #include <float.h>
@@ -30,7 +30,6 @@ using namespace std;
 const int pixel_height = 35; /// The input data pixel height, note game_Width = 220
 const int pixel_width = 35;  /// The input data pixel width, note game_Height = 200
 const int nr_of_actions = 3;
-
 
 int do_dice_action(void)
 {
@@ -152,8 +151,8 @@ int main()
     policy_fc_net.activation_function_mode = 2;
     policy_fc_net.force_last_activation_function_mode = 3;
     policy_fc_net.use_skip_connect_mode = 0;
-    policy_fc_net.use_dropouts = 1;
-    policy_fc_net.dropout_proportion = 0.35;
+    policy_fc_net.use_dropouts = 0;
+    policy_fc_net.dropout_proportion = 0.0;
     policy_fc_net.clip_deriv = 0;
 
     const int next_scene_hid_layers = 3;
@@ -240,13 +239,16 @@ int main()
     //============ Neural Network Size setup is finnish ! ==================
 
     const int g_replay_size = 1000; // how meny episode on one epoch
+    const int retrain_next_pred_net_times = 1;
+    const int retrain_policy_net = 4;
+
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
     const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
     policy_fc_net.learning_rate = 0.005;
-    policy_fc_net.momentum = 0.25; //
+    policy_fc_net.momentum = 0.95; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -259,9 +261,9 @@ int main()
     const double derating_epsilon = 0.0025 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
-    int target_policy_on_next_action_selection = 1;//0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition 
-    const int target_policy_use_f_p_2_pixel_from_predict_net = 0;//0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning. 
-    const int target_off_set_to_output_itself = 1;//1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
+    int target_policy_on_next_action_selection = 1;               // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
+    const int target_policy_use_f_p_2_pixel_from_predict_net = 0; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning.
+    const int target_off_set_to_output_itself = 1;                // 1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
         epsilon = warm_up_epsilon;
@@ -319,7 +321,7 @@ int main()
     for (int i = 0; i < 3; i++)
     {
         string log_filename;
-        
+
         switch (i)
         {
         case 0:
@@ -331,7 +333,7 @@ int main()
         case 2:
             log_filename = log_file_win_prob;
             break;
-        
+
         default:
             log_filename = log_file_win_prob;
             break;
@@ -362,7 +364,7 @@ int main()
         file << "policy_net_hid_nodes_L3 = " << policy_net_hid_nodes_L3 << endl;
 
         file << "next_scene_fc_net.learning_rate = " << next_scene_fc_net.learning_rate << endl;
-        file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;        
+        file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;
         file << "policy_fc_net.learning_rate = " << policy_fc_net.learning_rate << endl;
         file << "policy_fc_net.momentum = " << policy_fc_net.momentum << endl;
 
@@ -375,15 +377,13 @@ int main()
         file << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
         file << "policy_fc_net.use_dropouts =" << policy_fc_net.use_dropouts << endl;
         file << "policy_fc_net.dropout_proportion = " << policy_fc_net.dropout_proportion << endl;
-
+        file << "retrain_policy_net = " << retrain_policy_net << endl;
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
 
     cout << " epsilon = " << epsilon << endl;
-    
 
-    const int retrain_next_pred_net_times = 1;
     const int save_after_nr = 5;
     // statistics report
     const int max_w_p_nr = 1000;
@@ -471,7 +471,7 @@ int main()
             }
             else
             {
-                run_only_random_actions_for_next_scene = 0; //Never toggle Skip running next scene in benchmark mode when next scene netowork not used
+                run_only_random_actions_for_next_scene = 0; // Never toggle Skip running next scene in benchmark mode when next scene netowork not used
             }
         }
         cout << "******** Epoch number = " << epoch << " **********" << endl;
@@ -637,7 +637,7 @@ int main()
                                 else
                                 {
                                     // Benchmark mode
-                                    double action_policy_net_output = policy_fc_net.output_layer[act];//In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
+                                    double action_policy_net_output = policy_fc_net.output_layer[act]; // In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
                                     if (action_policy_net_output > strongest_action_value)
                                     {
                                         strongest_action_value = action_policy_net_output; // Store the strongest policy value
@@ -778,228 +778,229 @@ int main()
         cout << endl;
         if (run_only_random_actions_for_next_scene == 0)
         {
-
-            cout << "********************************************" << endl;
-            cout << "******** Training policy network ***********" << endl;
-            cout << "********************************************" << endl;
-            for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
+            for (int ret_p = 0; ret_p < retrain_policy_net; ret_p++)
             {
-                // First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
-                for (int frame_g = gameObj1.nr_of_frames - 1; frame_g > 0; frame_g--) // Loop from end state backwards to recalculate rewards with decay backwards
+                cout << "********************************************" << endl;
+                cout << "******** Training policy network ***********" << endl;
+                cout << "********************************************" << endl;
+                for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
                 {
-                    replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q = replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q + replay_buffer[g_replay_cnt][frame_g].rewards_Q * gamma_decay;
-                }
-            }
-            // Learning policy networks from replay buffer
-            train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
-            policy_fc_net.loss_A = 0.0;
-            int d_t_cnt = 0;
-            for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
-            {
-
-                int train_nr = train_policy_net_rand_list[train_cnt];
-                int g_replay_cnt = train_nr / number_of_policy_train_frm;
-                int frame_g = train_nr % number_of_policy_train_frm;
-                frame_g = frame_g + nr_frames_strobed; // Step forward where so the first frames at beginning also could be loaded to policy net
-                // frame_g number is now in range = 4..34 when game frames = 35 and nr_frame_strobe = 4
-
-                cout << "                                                                                                       " << endl;
-                std::cout << "\033[F";
-                cout << " policy net train count down = " << number_of_policy_train_tot - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << endl;
-                std::cout << "\033[F";
-
-                if (frame_g == gameObj1.nr_of_frames - 1)
-                {
-                    term_state = NOW_TERMINAL_STATE;
-                }
-                if (frame_g == gameObj1.nr_of_frames - 2)
-                {
-                    term_state = ONE_STEP_BEFORE_TERMINAL_STATE;
-                }
-                if (frame_g < gameObj1.nr_of_frames - 2)
-                {
-                    term_state = NORMAL_STATE;
-                }
-
-                if (term_state != NOW_TERMINAL_STATE)
-                {
-                    if (target_policy_use_f_p_2_pixel_from_predict_net == 1)
+                    // First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
+                    for (int frame_g = gameObj1.nr_of_frames - 1; frame_g > 0; frame_g--) // Loop from end state backwards to recalculate rewards with decay backwards
                     {
-                        // Do same methode as during game play
-                        //********** Forward next predict net ********
-                        int inp_n_idx = 0;
+                        replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q = replay_buffer[g_replay_cnt][frame_g - 1].rewards_Q + replay_buffer[g_replay_cnt][frame_g].rewards_Q * gamma_decay;
+                    }
+                }
+                // Learning policy networks from replay buffer
+                train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
+                policy_fc_net.loss_A = 0.0;
+                int d_t_cnt = 0;
+                for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
+                {
 
-                        // Load input frame video from replay memory
-                        for (int f = 0; f < nr_frames_strobed; f++)
-                        {
-                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                            {
-                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                //  Load the prediction network with input frame video from replay memory
-                                next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                inp_n_idx++;
-                            }
-                        }
-                        // Load taken action from replay memory
-                        for (int i = 0; i < nr_of_actions; i++)
-                        {
-                            double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
-                            next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
-                        }
-                        next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-                        //*******************************************
+                    int train_nr = train_policy_net_rand_list[train_cnt];
+                    int g_replay_cnt = train_nr / number_of_policy_train_frm;
+                    int frame_g = train_nr % number_of_policy_train_frm;
+                    frame_g = frame_g + nr_frames_strobed; // Step forward where so the first frames at beginning also could be loaded to policy net
+                    // frame_g number is now in range = 4..34 when game frames = 35 and nr_frame_strobe = 4
 
-                        inp_n_idx = 0;
-                        for (int f = 0; f < nr_frames_strobed; f++)
+                    cout << "                                                                                                       " << endl;
+                    std::cout << "\033[F";
+                    cout << " policy net train count down = " << number_of_policy_train_tot - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << endl;
+                    std::cout << "\033[F";
+
+                    if (frame_g == gameObj1.nr_of_frames - 1)
+                    {
+                        term_state = NOW_TERMINAL_STATE;
+                    }
+                    if (frame_g == gameObj1.nr_of_frames - 2)
+                    {
+                        term_state = ONE_STEP_BEFORE_TERMINAL_STATE;
+                    }
+                    if (frame_g < gameObj1.nr_of_frames - 2)
+                    {
+                        term_state = NORMAL_STATE;
+                    }
+
+                    if (term_state != NOW_TERMINAL_STATE)
+                    {
+                        if (target_policy_use_f_p_2_pixel_from_predict_net == 1)
                         {
-                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                            // Do same methode as during game play
+                            //********** Forward next predict net ********
+                            int inp_n_idx = 0;
+
+                            // Load input frame video from replay memory
+                            for (int f = 0; f < nr_frames_strobed; f++)
                             {
-                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                if (skip_scene_predictor_only_for_benchmarking == 0)
+                                for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
-                                    // use the prediction network stadegy
-                                    int first_frame_size = pixel_width * pixel_height;
-                                    if (pix_idx > first_frame_size)
+                                    double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                    //  Load the prediction network with input frame video from replay memory
+                                    next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    inp_n_idx++;
+                                }
+                            }
+                            // Load taken action from replay memory
+                            for (int i = 0; i < nr_of_actions; i++)
+                            {
+                                double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g].selected_action);
+                                next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                            }
+                            next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
+                            //*******************************************
+
+                            inp_n_idx = 0;
+                            for (int f = 0; f < nr_frames_strobed; f++)
+                            {
+                                for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                {
+                                    double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                    if (skip_scene_predictor_only_for_benchmarking == 0)
                                     {
-                                        // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
-                                        // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
-                                        // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
-                                        // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                        policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                        // use the prediction network stadegy
+                                        int first_frame_size = pixel_width * pixel_height;
+                                        if (pix_idx > first_frame_size)
+                                        {
+                                            // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                            // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                            // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Bench mark methode
+                                        // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
+                                        policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                    }
+                                    inp_n_idx++;
+                                }
+                            }
+
+                            if (skip_scene_predictor_only_for_benchmarking == 0)
+                            {
+                                // Insert predicted scene to policy network
+                                for (int row = 0; row < pixel_height; row++)
+                                {
+                                    for (int col = 0; col < pixel_width; col++)
+                                    {
+                                        double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
+                                        policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
                                     }
                                 }
-                                else
-                                {
-                                    // Bench mark methode
-                                    // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                    policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
-                                }
-                                inp_n_idx++;
                             }
-                        }
-
-                        if (skip_scene_predictor_only_for_benchmarking == 0)
-                        {
-                            // Insert predicted scene to policy network
-                            for (int row = 0; row < pixel_height; row++)
-                            {
-                                for (int col = 0; col < pixel_width; col++)
-                                {
-                                    double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
-                                    policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        //Load all f2,f1,f0,f+1 all from replay memory only (Not use next scene prediction net for produce the f+1 frame instead use f+1 from replay memory)
-                        int inp_n_idx = 0;
-                        // Load input frame video from replay memory
-                        for (int f = 0; f < nr_frames_strobed; f++)
-                        {
-                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                            {
-                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g + 1 - nr_frames_strobed + f].video_frame[pix_idx];
-                                //  Load the policy_fc_net network with input frame video from replay memory
-                                policy_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                inp_n_idx++;
-                            }
-                        }
-                    }
-                    // All thing are ready now to do forward of policy network with next predicted scene in mind
-                    policy_fc_net.forward_pass();
-
-                    // Set target values
-                    for (int i = 0; i < nr_of_actions; i++)
-                    {
-                      //if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
-                        int get_rewards_from_two_step_future_state_nr = frame_g + 2;
-                        if(get_rewards_from_two_step_future_state_nr > gameObj1.nr_of_frames - 1)
-                        {
-                            get_rewards_from_two_step_future_state_nr = gameObj1.nr_of_frames - 1;// Limit index to the terminal state 
-                        }
-                        if (replay_buffer[g_replay_cnt][frame_g + target_policy_on_next_action_selection].selected_action == i)
-                        {
-                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][get_rewards_from_two_step_future_state_nr].rewards_Q; // Train towards rewards_Q value 2 step in future state
                         }
                         else
                         {
-                            if(target_off_set_to_output_itself == 1)
+                            // Load all f2,f1,f0,f+1 all from replay memory only (Not use next scene prediction net for produce the f+1 frame instead use f+1 from replay memory)
+                            int inp_n_idx = 0;
+                            // Load input frame video from replay memory
+                            for (int f = 0; f < nr_frames_strobed; f++)
                             {
-                                policy_fc_net.target_layer[i] = policy_fc_net.target_layer[i]; // OFF
+                                for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                {
+                                    double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g + 1 - nr_frames_strobed + f].video_frame[pix_idx];
+                                    //  Load the policy_fc_net network with input frame video from replay memory
+                                    policy_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    inp_n_idx++;
+                                }
+                            }
+                        }
+                        // All thing are ready now to do forward of policy network with next predicted scene in mind
+                        policy_fc_net.forward_pass();
+
+                        // Set target values
+                        for (int i = 0; i < nr_of_actions; i++)
+                        {
+                            // if (replay_buffer[g_replay_cnt][frame_g + 0].selected_action == i)
+                            int get_rewards_from_two_step_future_state_nr = frame_g + 2;
+                            if (get_rewards_from_two_step_future_state_nr > gameObj1.nr_of_frames - 1)
+                            {
+                                get_rewards_from_two_step_future_state_nr = gameObj1.nr_of_frames - 1; // Limit index to the terminal state
+                            }
+                            if (replay_buffer[g_replay_cnt][frame_g + target_policy_on_next_action_selection].selected_action == i)
+                            {
+                                policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][get_rewards_from_two_step_future_state_nr].rewards_Q; // Train towards rewards_Q value 2 step in future state
                             }
                             else
                             {
-                                policy_fc_net.target_layer[i] = policy_target_off; // OFF
+                                if (target_off_set_to_output_itself == 1)
+                                {
+                                    policy_fc_net.target_layer[i] = policy_fc_net.target_layer[i]; // OFF
+                                }
+                                else
+                                {
+                                    policy_fc_net.target_layer[i] = policy_target_off; // OFF
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    //Now in terminal state
-                    int inp_n_idx = 0;
-                    for (int f = 0; f < nr_frames_strobed; f++)
+                    else
                     {
-                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                        // Now in terminal state
+                        int inp_n_idx = 0;
+                        for (int f = 0; f < nr_frames_strobed; f++)
                         {
-                            double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                            policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here at terminal state we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
-                            inp_n_idx++;
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                            {
+                                double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
+                                policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here at terminal state we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                inp_n_idx++;
+                            }
+                        }
+                        policy_fc_net.forward_pass();
+                        for (int i = 0; i < nr_of_actions; i++)
+                        {
+                            // We are in terminal state no action could be taken in terminal state so all wil have the rewards as target value
+                            policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value on all actions if we are in terminal state
                         }
                     }
-                    policy_fc_net.forward_pass();
-                    for (int i = 0; i < nr_of_actions; i++)
-                    {
-                        // We are in terminal state no action could be taken in terminal state so all wil have the rewards as target value
-                        policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][frame_g].rewards_Q; // Train towards rewards_Q value on all actions if we are in terminal state
-                    }
-                }
-                // Now also target values are ready for policy netowork training
-                policy_fc_net.backpropagtion();      // Train
-                policy_fc_net.update_all_weights(1); // and update weights
+                    // Now also target values are ready for policy netowork training
+                    policy_fc_net.backpropagtion();      // Train
+                    policy_fc_net.update_all_weights(1); // and update weights
 
-                if (d_t_cnt < update_policy_view_after)
-                {
-                    d_t_cnt++;
-                }
-                else
-                {
-                    d_t_cnt = 0;
-                    // View mat_f_last_policy_net_first_layer_view
-                    // vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
-                    for (int L1_node_cnt = 0; L1_node_cnt < policy_net_hid_nodes_L1; L1_node_cnt++)
+                    if (d_t_cnt < update_policy_view_after)
                     {
-                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                        {
-                            int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
-                            int col = pixel_width * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
-                            mat_f_last_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-1)) ] + 0.5;
-                            mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed-2)) ] + 0.5;
-                        }
-                    }
-                    if(skip_scene_predictor_only_for_benchmarking == 0)
-                    {
-                        imshow("next frame f+1 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
-                        imshow("pressent frame f0 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                        d_t_cnt++;
                     }
                     else
                     {
-                        imshow("Benchmark pressent frame f0 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
-                        imshow("Benchmark post frame f-1 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                        d_t_cnt = 0;
+                        // View mat_f_last_policy_net_first_layer_view
+                        // vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
+                        for (int L1_node_cnt = 0; L1_node_cnt < policy_net_hid_nodes_L1; L1_node_cnt++)
+                        {
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                            {
+                                int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
+                                int col = pixel_width * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                                mat_f_last_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 1))] + 0.5;
+                                mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 2))] + 0.5;
+                            }
+                        }
+                        if (skip_scene_predictor_only_for_benchmarking == 0)
+                        {
+                            imshow("next frame f+1 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
+                            imshow("pressent frame f0 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                        }
+                        else
+                        {
+                            imshow("Benchmark pressent frame f0 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
+                            imshow("Benchmark post frame f-1 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                        }
+                        waitKey(1);
                     }
-                    waitKey(1);
                 }
+                cout << endl;
+                cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
+                cout << endl;
+
+                std::ofstream file(log_file_policy_net_loss, std::ios::app);
+                file << "epoch = " << epoch << " epsilon = " << epsilon << " retrain_policy net = " << ret_p << " Policy net Loss = " << policy_fc_net.loss_A << endl;
+                file.close();
             }
-            cout << endl;
-            cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
-            cout << endl;
-
-            std::ofstream file(log_file_policy_net_loss, std::ios::app);
-            file << "epoch = " << epoch << " epsilon = " << epsilon << " Policy net Loss = " << policy_fc_net.loss_A << endl;
-            file.close();
-
             if (skip_scene_predictor_only_for_benchmarking == 1)
             {
                 cout << "***************************************************************************************************************************" << endl;
@@ -1125,7 +1126,7 @@ int main()
                     cout << " No Training of next scene predictiable net was made because no random action was taken rand_act_counter = " << rand_act_counter << endl;
                     cout << endl;
                 }
-                //End next scene traning 
+                // End next scene traning
             }
             // Save all weights
             if (save_cnt < save_after_nr)
