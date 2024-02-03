@@ -6,14 +6,12 @@ fclose(fid);
 epoch = data{1};  % Extract the first column (epoch)
 Now_win_probablilty = data{2};  % Extract the second column 
 Old_win_probablilty = data{3};  % Extract the third column
-%lastWinProbability = data{4};  % Extract the fourth column
 
 % Create a new figure
 figure;
 
-plot(epoch, epsilon, 'b.-', 'LineWidth', 1.5);  % Blue line
-hold on;
 plot(epoch, Now_win_probablilty, 'g.-', 'LineWidth', 1.5);  % Green line
+hold on;
 plot(epoch, Old_win_probablilty, 'r.-', 'LineWidth', 1.5);  % Red line
 
 % Add labels and title
@@ -25,14 +23,14 @@ title("Data Trends vs. Epoch");
 grid on;
 
 % Legend
-legend("Epsilon", "Now_win_probablilty", "Last Win Probability");
+legend("Now_win_probablilty", "Last Win Probability");
 
 % Release hold
 hold off;
 
 
 % Legend
-legend([h1, h2, h3], "Epsilon", "Now_win_probablilty", "Last Win Probability");
+legend([h1, h2], "Now_win_probablilty", "Last Win Probability");
 
 % Release hold
 hold off;
