@@ -240,7 +240,7 @@ int main()
 
     const int g_replay_size = 1000; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
-    const int retrain_policy_net = 4;
+    const int retrain_policy_net = 1;
 
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
@@ -262,7 +262,7 @@ int main()
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
     int target_policy_on_next_action_selection = 1;               // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
-    const int target_policy_use_f_p_2_pixel_from_predict_net = 0; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Not prefered use frame f+1 from predict net at traning.
+    int target_policy_use_f_p_2_pixel_from_predict_net = 1; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Work also use frame f+1 from predict net at traning.
     const int target_off_set_to_output_itself = 1;                // 1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
@@ -317,6 +317,21 @@ int main()
         cout << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
         cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
     }
+
+
+    cout << "Set Y=1 N=0 to target_policy_use_f_p_2_pixel_from_predict_net variable " << endl;
+    cout << "When traning do you want to feed policy network f+1 view from next predicted view as f+1 select Y or feed policy traning f+1 with replay f+1 select N. Select Y/N " << endl;
+    cin >> answer;
+    if (answer == 'Y' || answer == 'y')
+    {
+        target_policy_use_f_p_2_pixel_from_predict_net = 1;
+    }
+    else
+    {
+        target_policy_use_f_p_2_pixel_from_predict_net = 1;
+    }
+    cout << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
+
 
     for (int i = 0; i < 3; i++)
     {
