@@ -43,6 +43,10 @@ and instead put in only post f-3,f-2,f-1,f0 frame and presenet frame into policy
 ### Split next_scene_net_weights.dat file
         split -b 8M next_scene_net_weights.dat next_scene_net_weights_part_
 
+## Octave plot example
+
+![](octave/octave_example.png)
+
         
 
 
