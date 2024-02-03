@@ -2,7 +2,7 @@
 
 ## Predicetd next scene depending on 3 diffrent actions, Down, Up or Not move the pad
 
-![](ball_close_pad_example_2.png)
+![](ball_close_to_pad_example_zoomed_in.png)
 
 Dual reinforcemnt learning network.
 1. This first network try to predict the next frame scene one step in future. This "next_scene_fc_net" network will produce one scene for each possible action at next future state.
