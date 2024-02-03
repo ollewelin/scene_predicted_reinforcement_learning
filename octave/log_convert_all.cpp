@@ -52,9 +52,7 @@ int main() {
 
 
     // Open the output file
-    ofstream output_file_win("output_win.txt");
-    ofstream output_file_policy("output_policy.txt");
-    ofstream output_file_next_scene("output_next_scene.txt");
+    ofstream output_file("output.txt");
 
     // Open the input files
     ifstream win_prob_stripped_file_inp("log_file_win_prob_stripped.txt");
@@ -62,10 +60,8 @@ int main() {
     ifstream next_scene_net_loss_stripped_file_inp("next_scene_net_loss_stripped.txt");
     
     // Write the header line to the output file
-    output_file_win << "epoch Now_win_probablilty Old_win_probablilty total_plays" << endl;
-    output_file_policy << "epoch epsilon Policy_net_Loss" << endl;
-    output_file_next_scene << "epoch scene_predictiable_net_Loss" << endl;    
-    while (getline(win_prob_stripped_file_inp, win_prob_line))
+    output_file << "epoch Old_win_probablilty total_plays epsilon Policy_net_Loss scene_predictiable_net_Loss" << endl;
+    while (getline(win_prob_stripped_file_inp, win_prob_line) && getline(policy_net_loss_stripped_file_inp, policy_net_loss_line) && getline(next_scene_net_loss_stripped_file_inp, next_scene_net_loss_line)) 
     {
         // Parse the epoch number
         size_t epoch_pos = win_prob_line.find("epoch = ");
@@ -77,14 +73,7 @@ int main() {
             epoch = stoi(win_prob_line.substr(epoch_pos + 8));
             cout << "The integer value after \"epoch = \" is: " << epoch << endl;
         }
-        //Win probaility Now = 
-        // Parse the Now win probability and total plays from the win prob file
-        size_t now_win_prob_pos = win_prob_line.find("Win probaility Now = ");
-        float now_win_prob = 0.0f;
-        if (now_win_prob_pos != string::npos)
-        {
-            now_win_prob = stof(win_prob_line.substr(now_win_prob_pos + 21));
-        }
+        
         // Parse the Old win probability and total plays from the win prob file
         size_t old_win_prob_pos = win_prob_line.find("Old win probablilty = ");
         float old_win_prob = 0.0f;
@@ -98,24 +87,7 @@ int main() {
         {
             total_plays = stoi(win_prob_line.substr(total_plays_pos + 14));
         }
-        // Write the parsed data to the output file
-        output_file_win << epoch << " " << now_win_prob << " " << old_win_prob << " " << total_plays << endl;
-    }
-
-
-    while (getline(policy_net_loss_stripped_file_inp, policy_net_loss_line)) 
-    {
-        // Parse the epoch number
-        size_t epoch_pos = policy_net_loss_line.find("epoch = ");
-        cout << epoch_pos << endl;
-       // int epoch_pos_int = win_prob_line.find("Old win probablilty = ");
-        int epoch = 0;
-        if (epoch_pos != string::npos)
-        {
-            epoch = stoi(policy_net_loss_line.substr(epoch_pos + 8));
-            cout << "The integer value after \"epoch = \" is: " << epoch << endl;
-        }
-
+        
         // Parse the epsilon from the policy net loss file
         size_t epsilon_pos = policy_net_loss_line.find("epsilon = ");
         float epsilon = 0.0f;
@@ -130,43 +102,26 @@ int main() {
         {
             policy_net_loss = stof(policy_net_loss_line.substr(policy_net_loss_pos + 18));
         }       
-        // Write the parsed data to the output file
-        output_file_policy << epoch << " " << epsilon << " " << policy_net_loss <<  endl;
-    }
 
-    while (getline(next_scene_net_loss_stripped_file_inp, next_scene_net_loss_line)) 
-    {
-        // Parse the epoch number
-        size_t epoch_pos = next_scene_net_loss_line.find("epoch = ");
-        cout << epoch_pos << endl;
-       // int epoch_pos_int = win_prob_line.find("Old win probablilty = ");
-        int epoch = 0;
-        if (epoch_pos != string::npos)
-        {
-            epoch = stoi(next_scene_net_loss_line.substr(epoch_pos + 8));
-            cout << "The integer value after \"epoch = \" is: " << epoch << endl;
-        }
-        
         // Parse the scene predictiable net loss from the next scene net loss file
         size_t scene_predictiable_net_loss_pos = next_scene_net_loss_line.find("scene predictiable net Loss = ");
         float scene_predictiable_net_loss = 0.0f;
-        if (scene_predictiable_net_loss_pos != string::npos)
+        if (policy_net_loss_pos != string::npos)
         {
             scene_predictiable_net_loss = stof(next_scene_net_loss_line.substr(scene_predictiable_net_loss_pos + 30));
         }       
 
         // Write the parsed data to the output file
-        output_file_next_scene << epoch << " " << scene_predictiable_net_loss << endl;
+        output_file << epoch << " " << old_win_prob << " " << total_plays << " " << epsilon << " " << policy_net_loss << " " << scene_predictiable_net_loss << endl;
     }
-
 
     // Close the input and output files
     win_prob_stripped_file_inp.close();
     policy_net_loss_stripped_file_inp.close();
     next_scene_net_loss_stripped_file_inp.close();
-    output_file_win.close();
-    output_file_policy.close();
-    output_file_next_scene.close();
+    output_file.close();
+
+    cout << "Output written to output.txt" << endl;
 
     return 0;
 
