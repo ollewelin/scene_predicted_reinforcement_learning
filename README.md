@@ -49,6 +49,10 @@ and instead put in only post f-3,f-2,f-1,f0 frame and presenet frame into policy
 
 ![](octave/octave_example2.png)
 
+![](in_middle_traning_example2.png)
+
+![](all_from_begining_slower_learning_rate.png)
+
         
 
 
