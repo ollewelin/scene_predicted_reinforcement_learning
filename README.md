@@ -16,6 +16,18 @@ get strongest (best) action. So now with next scene network the algorithm search
 
 This approch of dual network will have a larger future search tree in future.
 
+## Overview
+
+![](overview.png)
+
+## Next scene prediction network 
+
+![](next_scene_prediction_network.png)
+
+## Example of 3 action predicted future frame f+1 for action 0, 1, 2
+
+![](ball_close_to_pad_example_zoomed_in.png)
+
 ### To evaluate benchmark this network
 To evaluate benchmark if this is a good strategy I have make a switch in the program called 
 
@@ -31,8 +43,6 @@ set this to 1
 
 Then we skip use "next_scene_fc_net" network 
 and instead put in only post f-3,f-2,f-1,f0 frame and presenet frame into policy network f-3,f-2,f-1,f0 
-
-![](example.png)
 
 ## Combine (or split) large data files in ubuntu
 
