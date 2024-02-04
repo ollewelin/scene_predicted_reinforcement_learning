@@ -139,3 +139,97 @@ epoch = 113 Win probaility Now = 66.436% at play count = 578 Old win probablilty
 epoch = 114 Win probaility Now = 66.7095% at play count = 778 Old win probablilty = 68.6314% total plays = 22800
 epoch = 115 Win probaility Now = 67.8937% at play count = 978 Old win probablilty = 68.6314% total plays = 23000
 epoch = 116 Win probaility Now = 77.4011% at play count = 177 Old win probablilty = 68.032% total plays = 23200
+epoch = 117 Win probaility Now = 78.7798% at play count = 377 Old win probablilty = 68.032% total plays = 23400
+epoch = 118 Win probaility Now = 79.0295% at play count = 577 Old win probablilty = 68.032% total plays = 23600
+epoch = 119 Win probaility Now = 75.8044% at play count = 777 Old win probablilty = 68.032% total plays = 23800
+epoch = 120 Win probaility Now = 74.002% at play count = 977 Old win probablilty = 68.032% total plays = 24000
+epoch = 121 Win probaility Now = 75.5682% at play count = 176 Old win probablilty = 74.1259% total plays = 24200
+epoch = 122 Win probaility Now = 73.4043% at play count = 376 Old win probablilty = 74.1259% total plays = 24400
+epoch = 123 Win probaility Now = 69.2708% at play count = 576 Old win probablilty = 74.1259% total plays = 24600
+epoch = 124 Win probaility Now = 66.6237% at play count = 776 Old win probablilty = 74.1259% total plays = 24800
+epoch = 125 Win probaility Now = 69.0574% at play count = 976 Old win probablilty = 74.1259% total plays = 25000
+epoch = 126 Win probaility Now = 40.5714% at play count = 175 Old win probablilty = 68.7313% total plays = 25200
+epoch = 127 Win probaility Now = 57.8667% at play count = 375 Old win probablilty = 68.7313% total plays = 25400
+epoch = 128 Win probaility Now = 56.5217% at play count = 575 Old win probablilty = 68.7313% total plays = 25600
+epoch = 129 Win probaility Now = 58.8387% at play count = 775 Old win probablilty = 68.7313% total plays = 25800
+epoch = 130 Win probaility Now = 61.8462% at play count = 975 Old win probablilty = 68.7313% total plays = 26000
+epoch = 131 Win probaility Now = 64.9425% at play count = 174 Old win probablilty = 61.5385% total plays = 26200
+epoch = 132 Win probaility Now = 60.1604% at play count = 374 Old win probablilty = 61.5385% total plays = 26400
+epoch = 133 Win probaility Now = 62.5436% at play count = 574 Old win probablilty = 61.5385% total plays = 26600
+epoch = 134 Win probaility Now = 64.8579% at play count = 774 Old win probablilty = 61.5385% total plays = 26800
+epoch = 135 Win probaility Now = 63.4497% at play count = 974 Old win probablilty = 61.5385% total plays = 27000
+epoch = 136 Win probaility Now = 70.5202% at play count = 173 Old win probablilty = 63.3367% total plays = 27200
+epoch = 137 Win probaility Now = 68.9008% at play count = 373 Old win probablilty = 63.3367% total plays = 27400
+epoch = 138 Win probaility Now = 68.0628% at play count = 573 Old win probablilty = 63.3367% total plays = 27600
+epoch = 139 Win probaility Now = 69.0815% at play count = 773 Old win probablilty = 63.3367% total plays = 27800
+epoch = 140 Win probaility Now = 69.6814% at play count = 973 Old win probablilty = 63.3367% total plays = 28000
+epoch = 141 Win probaility Now = 56.9767% at play count = 172 Old win probablilty = 69.2308% total plays = 28200
+epoch = 142 Win probaility Now = 68.0108% at play count = 372 Old win probablilty = 69.2308% total plays = 28400
+epoch = 143 Win probaility Now = 66.4336% at play count = 572 Old win probablilty = 69.2308% total plays = 28600
+epoch = 144 Win probaility Now = 65.6736% at play count = 772 Old win probablilty = 69.2308% total plays = 28800
+epoch = 145 Win probaility Now = 67.9012% at play count = 972 Old win probablilty = 69.2308% total plays = 29000
+epoch = 146 Win probaility Now = 72.5146% at play count = 171 Old win probablilty = 67.7323% total plays = 29200
+epoch = 147 Win probaility Now = 74.3935% at play count = 371 Old win probablilty = 67.7323% total plays = 29400
+epoch = 148 Win probaility Now = 69.7023% at play count = 571 Old win probablilty = 67.7323% total plays = 29600
+epoch = 149 Win probaility Now = 68.2231% at play count = 771 Old win probablilty = 67.7323% total plays = 29800
+epoch = 150 Win probaility Now = 65.7055% at play count = 971 Old win probablilty = 67.7323% total plays = 30000
+epoch = 151 Win probaility Now = 73.5294% at play count = 170 Old win probablilty = 66.4336% total plays = 30200
+epoch = 152 Win probaility Now = 64.0541% at play count = 370 Old win probablilty = 66.4336% total plays = 30400
+epoch = 153 Win probaility Now = 67.5439% at play count = 570 Old win probablilty = 66.4336% total plays = 30600
+epoch = 154 Win probaility Now = 68.961% at play count = 770 Old win probablilty = 66.4336% total plays = 30800
+epoch = 155 Win probaility Now = 67.0103% at play count = 970 Old win probablilty = 66.4336% total plays = 31000
+epoch = 156 Win probaility Now = 71.5976% at play count = 169 Old win probablilty = 67.1329% total plays = 31200
+epoch = 157 Win probaility Now = 71.2737% at play count = 369 Old win probablilty = 67.1329% total plays = 31400
+epoch = 158 Win probaility Now = 70.2988% at play count = 569 Old win probablilty = 67.1329% total plays = 31600
+epoch = 159 Win probaility Now = 71.1313% at play count = 769 Old win probablilty = 67.1329% total plays = 31800
+epoch = 160 Win probaility Now = 71.8266% at play count = 969 Old win probablilty = 67.1329% total plays = 32000
+epoch = 161 Win probaility Now = 63.0952% at play count = 168 Old win probablilty = 71.8282% total plays = 32200
+epoch = 162 Win probaility Now = 66.0326% at play count = 368 Old win probablilty = 71.8282% total plays = 32400
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.001
+policy_fc_net.momentum = 0.2
+g_replay_size = 200
+derating_epsilon = 0.0005
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 1
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
+policy_fc_net.use_dropouts =0
+policy_fc_net.dropout_proportion = 0
+retrain_policy_net = 1
+epoch = 163 Win probaility Now = 50% at play count = 200 Old win probablilty = 1% total plays = 200
+epoch = 164 Win probaility Now = 54% at play count = 400 Old win probablilty = 1% total plays = 400
+epoch = 165 Win probaility Now = 59.6667% at play count = 600 Old win probablilty = 1% total plays = 600
+epoch = 166 Win probaility Now = 58.5% at play count = 800 Old win probablilty = 1% total plays = 800
+epoch = 167 Win probaility Now = 61.5% at play count = 1000 Old win probablilty = 1% total plays = 1000
+epoch = 168 Win probaility Now = 73.8693% at play count = 199 Old win probablilty = 61.5385% total plays = 1200
+epoch = 169 Win probaility Now = 71.4286% at play count = 399 Old win probablilty = 61.5385% total plays = 1400
+epoch = 170 Win probaility Now = 70.4508% at play count = 599 Old win probablilty = 61.5385% total plays = 1600
+epoch = 171 Win probaility Now = 70.4631% at play count = 799 Old win probablilty = 61.5385% total plays = 1800
+epoch = 172 Win probaility Now = 70.5706% at play count = 999 Old win probablilty = 61.5385% total plays = 2000
+epoch = 173 Win probaility Now = 71.2121% at play count = 198 Old win probablilty = 70.6294% total plays = 2200
+epoch = 174 Win probaility Now = 69.598% at play count = 398 Old win probablilty = 70.6294% total plays = 2400
+epoch = 175 Win probaility Now = 70.7358% at play count = 598 Old win probablilty = 70.6294% total plays = 2600
+epoch = 176 Win probaility Now = 70.4261% at play count = 798 Old win probablilty = 70.6294% total plays = 2800
+epoch = 177 Win probaility Now = 69.6393% at play count = 998 Old win probablilty = 70.6294% total plays = 3000
+epoch = 178 Win probaility Now = 58.3756% at play count = 197 Old win probablilty = 69.4306% total plays = 3200
+epoch = 179 Win probaility Now = 71.2846% at play count = 397 Old win probablilty = 69.4306% total plays = 3400
+epoch = 180 Win probaility Now = 74.8744% at play count = 597 Old win probablilty = 69.4306% total plays = 3600
+epoch = 181 Win probaility Now = 74.7804% at play count = 797 Old win probablilty = 69.4306% total plays = 3800
+epoch = 182 Win probaility Now = 75.7272% at play count = 997 Old win probablilty = 69.4306% total plays = 4000
+epoch = 183 Win probaility Now = 79.5918% at play count = 196 Old win probablilty = 75.7243% total plays = 4200
+epoch = 184 Win probaility Now = 75% at play count = 396 Old win probablilty = 75.7243% total plays = 4400
+epoch = 185 Win probaility Now = 76.3423% at play count = 596 Old win probablilty = 75.7243% total plays = 4600

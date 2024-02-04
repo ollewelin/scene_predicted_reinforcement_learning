@@ -139,3 +139,75 @@ epoch = 112 scene predictiable net Loss = 20373.5
 epoch = 113 scene predictiable net Loss = 20230.4
 epoch = 114 scene predictiable net Loss = 20139.5
 epoch = 115 scene predictiable net Loss = 20290.2
+epoch = 116 scene predictiable net Loss = 20250.8
+epoch = 117 scene predictiable net Loss = 20172.7
+epoch = 118 scene predictiable net Loss = 20332.3
+epoch = 119 scene predictiable net Loss = 20207.4
+epoch = 120 scene predictiable net Loss = 20207.5
+epoch = 121 scene predictiable net Loss = 20270.8
+epoch = 122 scene predictiable net Loss = 20135.5
+epoch = 123 scene predictiable net Loss = 20159.3
+epoch = 124 scene predictiable net Loss = 20243.6
+epoch = 125 scene predictiable net Loss = 20192.4
+epoch = 126 scene predictiable net Loss = 20137.8
+epoch = 127 scene predictiable net Loss = 20232.4
+epoch = 128 scene predictiable net Loss = 20220.8
+epoch = 129 scene predictiable net Loss = 20404.5
+epoch = 130 scene predictiable net Loss = 20148.1
+epoch = 131 scene predictiable net Loss = 20105.5
+epoch = 132 scene predictiable net Loss = 20269.3
+epoch = 133 scene predictiable net Loss = 20238.2
+epoch = 134 scene predictiable net Loss = 20192.2
+epoch = 135 scene predictiable net Loss = 20213.9
+epoch = 136 scene predictiable net Loss = 20111.6
+epoch = 137 scene predictiable net Loss = 20216.4
+epoch = 138 scene predictiable net Loss = 20051.9
+epoch = 139 scene predictiable net Loss = 20327.1
+epoch = 140 scene predictiable net Loss = 20077.3
+epoch = 141 scene predictiable net Loss = 20194.9
+epoch = 142 scene predictiable net Loss = 20278.1
+epoch = 143 scene predictiable net Loss = 20293
+epoch = 144 scene predictiable net Loss = 20288.7
+epoch = 145 scene predictiable net Loss = 19969.4
+epoch = 146 scene predictiable net Loss = 20307.1
+epoch = 147 scene predictiable net Loss = 20009.9
+epoch = 148 scene predictiable net Loss = 20170
+epoch = 149 scene predictiable net Loss = 20314.9
+epoch = 150 scene predictiable net Loss = 20210.2
+epoch = 151 scene predictiable net Loss = 20303.3
+epoch = 152 scene predictiable net Loss = 20241.6
+epoch = 153 scene predictiable net Loss = 20307.5
+epoch = 154 scene predictiable net Loss = 20214
+epoch = 155 scene predictiable net Loss = 20184.3
+epoch = 156 scene predictiable net Loss = 20323.1
+epoch = 157 scene predictiable net Loss = 20026.7
+epoch = 158 scene predictiable net Loss = 20297.7
+epoch = 159 scene predictiable net Loss = 20267
+epoch = 160 scene predictiable net Loss = 20248.4
+epoch = 161 scene predictiable net Loss = 20184.2
+epoch = 162 scene predictiable net Loss = 20217
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.001
+policy_fc_net.momentum = 0.2
+g_replay_size = 200
+derating_epsilon = 0.0005
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 1
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
+policy_fc_net.use_dropouts =0
+policy_fc_net.dropout_proportion = 0
+retrain_policy_net = 1

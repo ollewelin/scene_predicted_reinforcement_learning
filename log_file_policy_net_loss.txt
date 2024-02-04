@@ -139,3 +139,97 @@ epoch = 113 epsilon = 0.1935 retrain_policy net = 0 Policy net Loss = 1534.86
 epoch = 114 epsilon = 0.193 retrain_policy net = 0 Policy net Loss = 1533.58
 epoch = 115 epsilon = 0.1925 retrain_policy net = 0 Policy net Loss = 1587.57
 epoch = 116 epsilon = 0.192 retrain_policy net = 0 Policy net Loss = 1480.6
+epoch = 117 epsilon = 0.1915 retrain_policy net = 0 Policy net Loss = 1468.75
+epoch = 118 epsilon = 0.191 retrain_policy net = 0 Policy net Loss = 1465.68
+epoch = 119 epsilon = 0.1905 retrain_policy net = 0 Policy net Loss = 1638.02
+epoch = 120 epsilon = 0.19 retrain_policy net = 0 Policy net Loss = 1658.67
+epoch = 121 epsilon = 0.1895 retrain_policy net = 0 Policy net Loss = 1504.71
+epoch = 122 epsilon = 0.189 retrain_policy net = 0 Policy net Loss = 1534.47
+epoch = 123 epsilon = 0.1885 retrain_policy net = 0 Policy net Loss = 1697.74
+epoch = 124 epsilon = 0.188 retrain_policy net = 0 Policy net Loss = 1732.85
+epoch = 125 epsilon = 0.1875 retrain_policy net = 0 Policy net Loss = 1535.67
+epoch = 126 epsilon = 0.187 retrain_policy net = 0 Policy net Loss = 1783.41
+epoch = 127 epsilon = 0.1865 retrain_policy net = 0 Policy net Loss = 1532.45
+epoch = 128 epsilon = 0.186 retrain_policy net = 0 Policy net Loss = 1738.98
+epoch = 129 epsilon = 0.1855 retrain_policy net = 0 Policy net Loss = 1577.01
+epoch = 130 epsilon = 0.185 retrain_policy net = 0 Policy net Loss = 1494.76
+epoch = 131 epsilon = 0.1845 retrain_policy net = 0 Policy net Loss = 1646.65
+epoch = 132 epsilon = 0.184 retrain_policy net = 0 Policy net Loss = 1806.71
+epoch = 133 epsilon = 0.1835 retrain_policy net = 0 Policy net Loss = 1604.36
+epoch = 134 epsilon = 0.183 retrain_policy net = 0 Policy net Loss = 1624.36
+epoch = 135 epsilon = 0.1825 retrain_policy net = 0 Policy net Loss = 1676.94
+epoch = 136 epsilon = 0.182 retrain_policy net = 0 Policy net Loss = 1561.74
+epoch = 137 epsilon = 0.1815 retrain_policy net = 0 Policy net Loss = 1663.71
+epoch = 138 epsilon = 0.181 retrain_policy net = 0 Policy net Loss = 1651.46
+epoch = 139 epsilon = 0.1805 retrain_policy net = 0 Policy net Loss = 1555.44
+epoch = 140 epsilon = 0.18 retrain_policy net = 0 Policy net Loss = 1511.14
+epoch = 141 epsilon = 0.1795 retrain_policy net = 0 Policy net Loss = 1713.41
+epoch = 142 epsilon = 0.179 retrain_policy net = 0 Policy net Loss = 1529.97
+epoch = 143 epsilon = 0.1785 retrain_policy net = 0 Policy net Loss = 1660.09
+epoch = 144 epsilon = 0.178 retrain_policy net = 0 Policy net Loss = 1671.73
+epoch = 145 epsilon = 0.1775 retrain_policy net = 0 Policy net Loss = 1492.64
+epoch = 146 epsilon = 0.177 retrain_policy net = 0 Policy net Loss = 1550.28
+epoch = 147 epsilon = 0.1765 retrain_policy net = 0 Policy net Loss = 1555.17
+epoch = 148 epsilon = 0.176 retrain_policy net = 0 Policy net Loss = 1683
+epoch = 149 epsilon = 0.1755 retrain_policy net = 0 Policy net Loss = 1637.57
+epoch = 150 epsilon = 0.175 retrain_policy net = 0 Policy net Loss = 1982.24
+epoch = 151 epsilon = 0.1745 retrain_policy net = 0 Policy net Loss = 1565.25
+epoch = 152 epsilon = 0.174 retrain_policy net = 0 Policy net Loss = 1697.23
+epoch = 153 epsilon = 0.1735 retrain_policy net = 0 Policy net Loss = 1526.61
+epoch = 154 epsilon = 0.173 retrain_policy net = 0 Policy net Loss = 1529.53
+epoch = 155 epsilon = 0.1725 retrain_policy net = 0 Policy net Loss = 1677.04
+epoch = 156 epsilon = 0.172 retrain_policy net = 0 Policy net Loss = 1610.51
+epoch = 157 epsilon = 0.1715 retrain_policy net = 0 Policy net Loss = 1557.33
+epoch = 158 epsilon = 0.171 retrain_policy net = 0 Policy net Loss = 1562.58
+epoch = 159 epsilon = 0.1705 retrain_policy net = 0 Policy net Loss = 1510.22
+epoch = 160 epsilon = 0.17 retrain_policy net = 0 Policy net Loss = 1515.6
+epoch = 161 epsilon = 0.1695 retrain_policy net = 0 Policy net Loss = 1633.69
+epoch = 162 epsilon = 0.169 retrain_policy net = 0 Policy net Loss = 1592.99
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.001
+policy_fc_net.momentum = 0.2
+g_replay_size = 200
+derating_epsilon = 0.0005
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 1
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
+policy_fc_net.use_dropouts =0
+policy_fc_net.dropout_proportion = 0
+retrain_policy_net = 1
+epoch = 163 epsilon = 0.1995 retrain_policy net = 0 Policy net Loss = 1675.75
+epoch = 164 epsilon = 0.199 retrain_policy net = 0 Policy net Loss = 1641.67
+epoch = 165 epsilon = 0.1985 retrain_policy net = 0 Policy net Loss = 1556.17
+epoch = 166 epsilon = 0.198 retrain_policy net = 0 Policy net Loss = 1661.08
+epoch = 167 epsilon = 0.1975 retrain_policy net = 0 Policy net Loss = 1483.8
+epoch = 168 epsilon = 0.197 retrain_policy net = 0 Policy net Loss = 1627.98
+epoch = 169 epsilon = 0.1965 retrain_policy net = 0 Policy net Loss = 1599.01
+epoch = 170 epsilon = 0.196 retrain_policy net = 0 Policy net Loss = 1618.56
+epoch = 171 epsilon = 0.1955 retrain_policy net = 0 Policy net Loss = 1568.9
+epoch = 172 epsilon = 0.195 retrain_policy net = 0 Policy net Loss = 1500.97
+epoch = 173 epsilon = 0.1945 retrain_policy net = 0 Policy net Loss = 1526.37
+epoch = 174 epsilon = 0.194 retrain_policy net = 0 Policy net Loss = 1600.47
+epoch = 175 epsilon = 0.1935 retrain_policy net = 0 Policy net Loss = 1542.1
+epoch = 176 epsilon = 0.193 retrain_policy net = 0 Policy net Loss = 1588.66
+epoch = 177 epsilon = 0.1925 retrain_policy net = 0 Policy net Loss = 1575.86
+epoch = 178 epsilon = 0.192 retrain_policy net = 0 Policy net Loss = 1724.55
+epoch = 179 epsilon = 0.1915 retrain_policy net = 0 Policy net Loss = 1370.17
+epoch = 180 epsilon = 0.191 retrain_policy net = 0 Policy net Loss = 1394.27
+epoch = 181 epsilon = 0.1905 retrain_policy net = 0 Policy net Loss = 1493.27
+epoch = 182 epsilon = 0.19 retrain_policy net = 0 Policy net Loss = 1481.21
+epoch = 183 epsilon = 0.1895 retrain_policy net = 0 Policy net Loss = 1447.87
+epoch = 184 epsilon = 0.189 retrain_policy net = 0 Policy net Loss = 1531.57
+epoch = 185 epsilon = 0.1885 retrain_policy net = 0 Policy net Loss = 1432.52
