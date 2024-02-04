@@ -238,7 +238,7 @@ int main()
     //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 1000; // how meny episode on one epoch
+    const int g_replay_size = 200; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
     const int retrain_policy_net = 1;
 
@@ -247,8 +247,8 @@ int main()
     const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
-    policy_fc_net.learning_rate = 0.005;
-    policy_fc_net.momentum = 0.9; //
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.2; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -404,7 +404,7 @@ int main()
     const int max_w_p_nr = 1000;
     int win_p_cnt = 0;
     int win_counter = 0;
-    double last_win_probability = 0.5;
+    double last_win_probability = 0.01;
     double now_win_probability = last_win_probability;
     int run_only_random_actions_for_next_scene = 0; // Toggle 1 or 0. 1 run only random action for training the next scene predictor net. 0 Run policy network with epsilon
                                                     // rand_action_list will be replaced with int run_only_random_actions_for_next_scene = 1 = 100% random plays
