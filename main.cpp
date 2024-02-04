@@ -332,6 +332,14 @@ int main()
     }
     cout << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
 
+    int epoch_start = 0;
+    cout <<  "Do you want to set a epoch start number (to contine the log files from before) <Y>/<N>" << endl;
+    cin >> answer;
+    if (answer == 'Y' || answer == 'y')
+    {
+        cout << "Enter (int) epoch_start" << endl;
+        cin >> epoch_start;
+    }
 
     for (int i = 0; i < 3; i++)
     {
@@ -466,7 +474,7 @@ int main()
     resize(game_video_full_size, resized_grapics, image_size_reduced);
     imshow("resized_grapics", resized_grapics); ///  resize(src, dst, size);
     const int max_nr_epochs = 1000000;
-    for (int epoch = 0; epoch < max_nr_epochs; epoch++)
+    for (int epoch = epoch_start; epoch < max_nr_epochs; epoch++)
     {
         if (run_only_random_actions_for_next_scene == 1 || skip_traning_next_scenen == 1)
         {
