@@ -415,7 +415,7 @@ int main()
             file << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
             file << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
         }
-
+        file << "Next f+2 predictor network as well on th way.. not finnish yet ,,," << endl;
         file << "Parmeters settings :" << endl;
         file << "next_scene_hid_nodes_L1 = " << next_scene_hid_nodes_L1 << endl;
         file << "next_scene_hid_nodes_L2 = " << next_scene_hid_nodes_L2 << endl;
@@ -482,7 +482,7 @@ int main()
     if (answer == 'Y' || answer == 'y')
     {
         next_scene_fc_net.load_weights(next_scene_net_filename);
-
+        next_F2_scene_fc_net.load_weights(next_F2_scene_net_filename);
         cout << "Do you want to randomazie the policy net weights (but scene net use the loaded weights)  Y/N " << endl;
         cin >> answer;
         if (answer == 'Y' || answer == 'y')
@@ -498,6 +498,7 @@ int main()
     else
     {
         next_scene_fc_net.randomize_weights(init_random_weight_propotion);
+        next_F2_scene_fc_net.randomize_weights(init_random_weight_propotion);        
         policy_fc_net.randomize_weights(init_random_weight_propotion);
         //    policy_fc_net.randomize_weights(1.5);
     }
@@ -608,12 +609,12 @@ int main()
                                         // use the prediction network stadegy
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
                                         int first_frame_size = pixel_width * pixel_height;
-                                        if (pix_idx > first_frame_size)
+                                        if (pix_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
                                         {
                                             // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
                                             // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
                                             // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
-                                            // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            // policy_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
                                             policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
                                     }
@@ -633,14 +634,15 @@ int main()
                             {
                                 if (skip_scene_predictor_only_for_benchmarking == 0) // use the prediction network stadegy
                                 {
-                                    // Loop thorugh all possible actont and try to predict next scene on each taken action.
+                                    // Loop thorugh all possible actons and try to predict next scene on each taken action.
                                     for (int i = 0; i < nr_of_actions; i++)
                                     {
                                         double one_hot_encode_action_input_node = make_one_hot_enc(i, act);
                                         next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
                                     }
                                     next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-
+//TODO
+cout << "continue coding here.. " << endl;
                                     // Store all predictied next video frame for each diffrent action.
                                     for (int row = 0; row < pixel_height; row++)
                                     {
