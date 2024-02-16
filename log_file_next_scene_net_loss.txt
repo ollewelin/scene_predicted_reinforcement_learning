@@ -211,3 +211,53 @@ skip_traning_next_scenen = 1
 policy_fc_net.use_dropouts =0
 policy_fc_net.dropout_proportion = 0
 retrain_policy_net = 1
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.001
+policy_fc_net.momentum = 0.2
+g_replay_size = 200
+derating_epsilon = 0.0005
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 1
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
+policy_fc_net.use_dropouts =0
+policy_fc_net.dropout_proportion = 0
+retrain_policy_net = 1
+************************************************************************************************
+Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 
+skip_scene_predictor_only_for_benchmarking = 0
+************************************************************************************************
+Parmeters settings :
+next_scene_hid_nodes_L1 = 200
+next_scene_hid_nodes_L2 = 200
+next_scene_hid_nodes_L3 = 200
+policy_net_hid_nodes_L1 = 85
+policy_net_hid_nodes_L2 = 25
+policy_net_hid_nodes_L3 = 10
+next_scene_fc_net.learning_rate = 0.001
+next_scene_fc_net.momentum = 0.1
+policy_fc_net.learning_rate = 0.001
+policy_fc_net.momentum = 0.2
+g_replay_size = 200
+derating_epsilon = 0.0005
+gamma_decay = 0.85
+target_policy_on_next_action_selection = 1
+target_policy_use_f_p_2_pixel_from_predict_net = 1
+target_off_set_to_output_itself = 1
+skip_traning_next_scenen = 1
+policy_fc_net.use_dropouts =0
+policy_fc_net.dropout_proportion = 0
+retrain_policy_net = 1
