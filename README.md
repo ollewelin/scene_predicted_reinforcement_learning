@@ -57,6 +57,16 @@ and instead put in only post f-3,f-2,f-1,f0 frame and presenet frame into policy
 ### Split next_scene_net_weights.dat file
         split -b 8M next_scene_net_weights.dat next_scene_net_weights_part_
 
+### Getting start trainbing in the middle of pretrained data
+
+Begin with combine the data files
+
+        cat next_scene_net_weights_part_* > next_scene_net_weights.dat
+
+Then do this start up command sequance example
+
+![](getting_started_in_middle.png)
+
 ## Octave plot example
 
 ![](octave/octave_example.png)
