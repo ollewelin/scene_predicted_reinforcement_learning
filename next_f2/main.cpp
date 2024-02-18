@@ -180,8 +180,9 @@ int main()
     const int next_F2_scene_hid_nodes_L1 = 200;
     const int next_F2_scene_hid_nodes_L2 = 200;
     const int next_F2_scene_hid_nodes_L3 = 200;
-    const int next_F2_scene_out_nodes = pixel_height * pixel_width; //
-    const int next_F2_scene_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
+    const int next_F2_scene_out_nodes = next_scene_out_nodes; //MUST be equal to next_scene_out_nodes
+    const int next_F2_scene_inp_nodes = next_scene_inp_nodes; //MUST be equal to next_scene_inp_nodes
+
 
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_strobe_frames, mat_next_scene_all_actions, mat_next_F2_scene_all_actions;
@@ -189,7 +190,7 @@ int main()
     Mat mat_f0_policy_net_first_layer_view;
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
-    mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
+    mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions * nr_of_actions, pixel_width, CV_32FC1);
     
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
@@ -514,6 +515,7 @@ int main()
     resize(game_video_full_size, resized_grapics, image_size_reduced);
     imshow("resized_grapics", resized_grapics); ///  resize(src, dst, size);
     const int max_nr_epochs = 1000000;
+    const int first_frame_size = pixel_width * pixel_height;
     for (int epoch = epoch_start; epoch < max_nr_epochs; epoch++)
     {
         if (run_only_random_actions_for_next_scene == 1 || skip_traning_next_scenen == 1)
@@ -608,12 +610,18 @@ int main()
                                     {
                                         // use the prediction network stadegy
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                        int first_frame_size = pixel_width * pixel_height;
-                                        if (pix_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
+                                        
+                                        if(inp_n_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
+                                        {
+                                            //Insert present and post fram to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
+                                            next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d;//Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size] 
+                                        }
+                                        
+                                        if (pix_idx > first_frame_size )
                                         {
                                             // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
-                                            // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
-                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                            // we will skip insert f-3,f-2  to policy net. f-3,f-2 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0. And next_F2_scene_fc_net  use f-2,f-1,f0,f+1
                                             // policy_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
                                             policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
@@ -629,20 +637,19 @@ int main()
                             }
                             double strongest_action_value = -DBL_MAX;
                             double sum_up_all_action_value_at_term_state = 0;
-                            int which_next_frame_have_stongest_action = 0;
-                            for (int act = 0; act < nr_of_actions; act++)
+                            int which_next_frame_have_stongest_action = 0;//0..8 when 3*3 actions
+                            for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                             {
                                 if (skip_scene_predictor_only_for_benchmarking == 0) // use the prediction network stadegy
                                 {
                                     // Loop thorugh all possible actons and try to predict next scene on each taken action.
                                     for (int i = 0; i < nr_of_actions; i++)
                                     {
-                                        double one_hot_encode_action_input_node = make_one_hot_enc(i, act);
+                                        double one_hot_encode_action_input_node = make_one_hot_enc(i, act_f0_to_fp1);
                                         next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
                                     }
                                     next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-//TODO
-cout << "continue coding here.. " << endl;
+
                                     // Store all predictied next video frame for each diffrent action.
                                     for (int row = 0; row < pixel_height; row++)
                                     {
@@ -650,69 +657,123 @@ cout << "continue coding here.. " << endl;
                                         {
                                             // Store all predictied next video frame for each diffrent action.
                                             double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
-                                            mat_next_scene_all_actions.at<float>(row + act * pixel_height, col) = next_sc_pix;
-                                            policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
+                                            mat_next_scene_all_actions.at<float>(row + act_f0_to_fp1 * pixel_height, col) = next_sc_pix;
+                                            if (term_state == ONE_STEP_BEFORE_TERMINAL_STATE) // Use only f+1 predictor if the state is 1 step before terminal state. We skip do f+2 prediction here because we can't predict beyond terminal state
+                                            {
+                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
+                                            }
                                         }
                                     }
-                                }
 
-                                // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action
-                                policy_fc_net.forward_pass();
-                                // int what_act_was_stongest_i_debug = 0;
-                                // double debug_v = 0;
-                                if (skip_scene_predictor_only_for_benchmarking == 0) // Normal mode
+                                }
+                            }
+
+                            if (term_state == NORMAL_STATE) // We can only use f+2 predictor if the state are 2 steps before terminal state. Otherwise we skip f+2 prediction
+                            {
+                                for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
-                                    for (int i = 0; i < nr_of_actions; i++)
+                                    int indx_one_frame = 0;
+                                    for (int row = 0; row < pixel_height; row++)
                                     {
-                                        double action_policy_net_output = policy_fc_net.output_layer[i];
-                                        if (term_state == NORMAL_STATE)
+                                        for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
                                         {
-                                            if (action_policy_net_output > strongest_action_value)
+                                            // Read predictied next f+1 video frame foreach diffrent action.
+                                            double next_sc_pix = mat_next_scene_all_actions.at<float>(row + act_f0_to_fp1 * pixel_height, col);
+                                            next_F2_scene_fc_net.input_layer[first_frame_size * (nr_frames_strobed-1) + indx_one_frame] = next_sc_pix;//Insert f+1 from stored predicetd frame from  next_scene_fc_net net from replay memory
+                                            policy_fc_net.input_layer[(nr_frames_strobed - 2) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;//Insert f+1 into ploicy network
+                                            indx_one_frame++;
+                                        }
+                                    }
+
+ 
+                                    //Loop through f+2 actions
+                                    for (int act_fp1_to_fp2 = 0; act_fp1_to_fp2 < nr_of_actions; act_fp1_to_fp2++)
+                                    {
+                                        // Search one step future frame f+2 in future 3*3*3 = 27 action values search
+                                        // Loop thorugh all possible actons and try to predict next scene on each taken action.
+                                        for (int i = 0; i < nr_of_actions; i++)
+                                        {
+                                            double one_hot_encode_action_input_node_2 = make_one_hot_enc(i, act_fp1_to_fp2);
+                                            next_F2_scene_fc_net.input_layer[first_frame_size * nr_frames_strobed + i] = one_hot_encode_action_input_node_2; // One hot encoding
+                                        }
+                                        next_F2_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
+
+                                        // Store all predictied next video frame for each diffrent action.
+                                        for (int row = 0; row < pixel_height; row++)
+                                        {
+                                            for (int col = 0; col < (mat_next_F2_scene_all_actions.cols / nr_of_actions); col++)
                                             {
-                                                strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                                which_next_frame_have_stongest_action = act;       // Store what action prediced frame of the next predicted frame have the strongest action value
-                                                // what_act_was_stongest_i_debug = i;
-                                                // debug_v = strongest_action_value;
+                                                // Store all predictied next video frame for each diffrent action.
+                                                double next_sc_pix = next_F2_scene_fc_net.output_layer[row * pixel_width + col];
+                                                mat_next_scene_all_actions.at<float>(row + act_fp1_to_fp2 * pixel_height + act_f0_to_fp1 * pixel_height * nr_of_actions, col) = next_sc_pix;
+                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;//Insert f+2 into policy network
+                                            }
+                                        }
+                                        // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action
+                                        policy_fc_net.forward_pass();
+
+                                        if (skip_scene_predictor_only_for_benchmarking == 0) // Normal mode
+                                        {
+                                            for (int i = 0; i < nr_of_actions; i++)
+                                            {
+                                                double action_policy_net_output = policy_fc_net.output_layer[i];
+                                                if (frame_g < gameObj1.nr_of_frames - 3)
+                                                {
+                                                    if (action_policy_net_output > strongest_action_value)
+                                                    {
+                                                        strongest_action_value = action_policy_net_output;     // Store the strongest policy value
+                                                        which_next_frame_have_stongest_action = act_f0_to_fp1 * nr_of_actions + act_fp1_to_fp2; // Store what action prediced frame of the next predicted frame have the strongest action value
+                                                        // what_act_was_stongest_i_debug = i;
+                                                        // debug_v = strongest_action_value;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    // TWO_STEP_BEFORE_TERMINAL_STATE
+                                                    if (i == 0)
+                                                    {
+                                                        sum_up_all_action_value_at_term_state = 0;
+                                                    }
+                                                    // At the predicted terminal state use summed action value instead of the max next action value
+                                                    // because in the terminal state action don't matters for the reward (no more action is possible to take at terminal)
+                                                    // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
+                                                    // therefor a sum up of all action is a convinient way to use the policy network i think
+                                                    sum_up_all_action_value_at_term_state += action_policy_net_output;
+                                                    if (i == nr_of_actions - 1)
+                                                    {
+                                                        // Check agianst the other next predicted frame summed action values
+                                                        if (sum_up_all_action_value_at_term_state > strongest_action_value)
+                                                        {
+                                                            which_next_frame_have_stongest_action = act_f0_to_fp1;
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                         else
                                         {
-                                            // ONE_STEP_BEFORE_TERMINAL_STATE
-                                            if (i == 0)
+                                            // Benchmark mode
+                                            double action_policy_net_output = policy_fc_net.output_layer[act_f0_to_fp1]; // In mbenchmark mode only use [act_f0_to_fp1] instead of [i] becuase now we check first step policy instead
+                                            if (action_policy_net_output > strongest_action_value)
                                             {
-                                                sum_up_all_action_value_at_term_state = 0;
-                                            }
-                                            // At the predicted terminal state use summed action value instead of the max next action value
-                                            // because in the terminal state action don't matters for the reward (no more action is possible to take at terminal)
-                                            // so at termninal state the policy net will be train on same rewards value on ALL output action node as a target
-                                            // therefor a sum up of all action is a convinient way to use the policy network i think
-                                            sum_up_all_action_value_at_term_state += action_policy_net_output;
-                                            if (i == nr_of_actions - 1)
-                                            {
-                                                // Check agianst the other next predicted frame summed action values
-                                                if (sum_up_all_action_value_at_term_state > strongest_action_value)
-                                                {
-                                                    which_next_frame_have_stongest_action = act;
-                                                }
+                                                strongest_action_value = action_policy_net_output;     // Store the strongest policy value
+                                                which_next_frame_have_stongest_action = act_f0_to_fp1; //
                                             }
                                         }
                                     }
                                 }
+                                if (frame_g < gameObj1.nr_of_frames - 3)
+                                {
+                                    // 3 step before terminal state
+                                    gameObj1.move_up = which_next_frame_have_stongest_action / nr_of_actions; // which_next_frame_have_stongest_action / nr_of_actions
+                                }
                                 else
                                 {
-                                    // Benchmark mode
-                                    double action_policy_net_output = policy_fc_net.output_layer[act]; // In mbenchmark mode only use [act] instead of [i] becuase now we check first step policy instead
-                                    if (action_policy_net_output > strongest_action_value)
-                                    {
-                                        strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                        which_next_frame_have_stongest_action = act;       //
-                                    }
+                                    // TWO_STEP_BEFORE_TERMINAL_STATE
+                                    gameObj1.move_up = which_next_frame_have_stongest_action; // which_next_frame_have_stongest_action
                                 }
-                                // cout << "which_next_frame_have_stongest_action = " << which_next_frame_have_stongest_action << " what_act_was_stongest_i_debug = " <<  what_act_was_stongest_i_debug << " debug_v = " << debug_v << endl;
-                                gameObj1.move_up = which_next_frame_have_stongest_action;
                                 replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
                             }
-
                             // Show next frame prediction
                             // if(frame_g < gameObj1.nr_of_frames - 10)
                             {
