@@ -629,19 +629,19 @@ int main()
                                         // use the prediction network stadegy
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
                                         
-                                        if(inp_n_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
+                                        if(inp_n_idx > first_frame_size )
                                         {
                                             //Insert present and post frame to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
-                                            next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d;//Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size] 
+                                            next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size ] = pixel_d;//Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size] 
                                         }
                                         
-                                        if (pix_idx > first_frame_size )
+                                        if (pix_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
                                         {
                                             // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
                                             // we will skip insert f-3,f-2  to policy net. f-3,f-2 only used for next_scene_fc_net.input_layer
                                             // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0. And next_F2_scene_fc_net  use f-2,f-1,f0,f+1
                                             // policy_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                            policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
+                                            policy_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
                                     }
                                     else
@@ -979,7 +979,8 @@ int main()
                     {
                         if (target_policy_use_f_p_2_pixel_from_predict_net == 1)
                         {
-                            // Do same methode as during game play
+                            // Do similar methode as during game play But now during training we step forward the policy network one step more 
+                            //So w
                             //********** Forward next predict net ********
                             int inp_n_idx = 0;
 
