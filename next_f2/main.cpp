@@ -1195,6 +1195,7 @@ int main()
 
                             int idx_r_train = rand_indx_act_list[train_cnt];
                             int inp_n_idx = 0;
+                            int inp_np2_idx = 0;
                             int frame_g = rand_action_list[idx_r_train].frame_index_of_rand_act;
                             int g_replay_cnt = rand_action_list[idx_r_train].episode_index_of_rand_act;
 
@@ -1213,6 +1214,11 @@ int main()
                                         double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
                                         // Load the prediction network with input frame video from replay memory
                                         next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                        if(f>0)//Skip load f-3 to next_F2_scene_fc_net
+                                        {
+                                            next_F2_scene_fc_net.input_layer[inp_np2_idx] = pixel_d;
+                                            inp_np2_idx++;
+                                        }
                                         inp_n_idx++;
                                     }
                                 }
@@ -1236,24 +1242,22 @@ int main()
                                 int inp_fp1_idx = 0;
                                 if(frame_g < gameObj1.nr_of_frames - 2)
                                 {
-                                    for (int f = 0; f < nr_frames_strobed - 1; f++)// -1 because we don't take f+1 from replay memory
+                                    for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                     {
-                                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
-                                        {
 #ifdef USE_REPLAY_FP1_TO_FEED_FP2_FRAME_PREDICTOR
-                                            // Load the prediction network with input frame video from replay memory
-                                            next_F2_scene_fc_net.input_layer[pix_idx] = next_scene_fc_net.target_layer[pix_idx];
+                                        // Load the prediction network with input frame video from replay memory
+                                        next_F2_scene_fc_net.input_layer[pix_idx + (nr_frames_strobed - 1) * (pixel_width * pixel_height)] = next_scene_fc_net.target_layer[pix_idx];
 #else
-                                            // Load the prediction network with f+1 frame video from predicted f+1 frame next_scene_fc_net.output_layer
-                                            next_F2_scene_fc_net.input_layer[pix_idx] = next_scene_fc_net.output_layer[pix_idx];
+                                        // Load the prediction network with f+1 frame video from predicted f+1 frame next_scene_fc_net.output_layer
+                                        next_F2_scene_fc_net.input_layer[pix_idx + (nr_frames_strobed - 1) * (pixel_width * pixel_height)] = next_scene_fc_net.output_layer[pix_idx];
 #endif
-                                        }
+                                        inp_np2_idx++;
                                     }
                                     // Load taken action from replay memory
                                     for (int i = 0; i < nr_of_actions; i++)
                                     {
                                         double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g + 1].selected_action);
-                                        next_F2_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                                        next_F2_scene_fc_net.input_layer[inp_np2_idx + i] = one_hot_encode_action_input_node; // One hot encoding
                                     }
                                     next_F2_scene_fc_net.forward_pass();
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
