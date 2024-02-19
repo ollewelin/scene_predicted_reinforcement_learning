@@ -193,7 +193,6 @@ int main()
     Mat mat_f0_policy_net_first_layer_view;
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
- //   mat_next_scene_selected_actions_replay_mem.create(pixel_height * g_replay_size, pixel_width, CV_32FC1);
     mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions * nr_of_actions, pixel_width, CV_32FC1);
     
 
@@ -282,7 +281,7 @@ int main()
     //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 200; // how meny episode on one epoch
+    const int g_replay_size = 20; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
     const int retrain_policy_net = 1;
 
@@ -617,7 +616,7 @@ int main()
                                         
                                         if(inp_n_idx > first_frame_size * 2)// * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
                                         {
-                                            //Insert present and post fram to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
+                                            //Insert present and post frame to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
                                             next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d;//Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size] 
                                         }
                                         
@@ -705,11 +704,11 @@ int main()
                                         // Store all predictied next video frame for each diffrent action.
                                         for (int row = 0; row < pixel_height; row++)
                                         {
-                                            for (int col = 0; col < (mat_next_F2_scene_all_actions.cols / nr_of_actions); col++)
+                                            for (int col = 0; col < mat_next_F2_scene_all_actions.cols; col++)
                                             {
                                                 // Store all predictied next video frame for each diffrent action.
                                                 double next_sc_pix = next_F2_scene_fc_net.output_layer[row * pixel_width + col];
-                                                mat_next_scene_all_actions.at<float>(row + act_fp1_to_fp2 * pixel_height + act_f0_to_fp1 * pixel_height * nr_of_actions, col) = next_sc_pix;
+                                                mat_next_F2_scene_all_actions.at<float>(row + act_fp1_to_fp2 * pixel_height + act_f0_to_fp1 * pixel_height * nr_of_actions, col) = next_sc_pix;
                                                 policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;//Insert f+2 into policy network
                                             }
                                         }
@@ -783,6 +782,7 @@ int main()
                             {
                                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
                                 // waitKey(1);
+                                imshow("mat_next_F2_scene_all_actions", mat_next_F2_scene_all_actions);
                                 imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
                                 waitKey(1);
                             }
@@ -910,7 +910,7 @@ int main()
             for (int ret_p = 0; ret_p < retrain_policy_net; ret_p++)
             {
                 cout << "********************************************" << endl;
-                cout << "******** Training policy network ***********" << endl;
+                cout << "******** TODO NOT finnis f+2 Training policy network ***********" << endl;
                 cout << "********************************************" << endl;
                 for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
                 {
@@ -1264,13 +1264,6 @@ int main()
                                     next_F2_scene_fc_net.backpropagtion();      // Train
                                     next_F2_scene_fc_net.update_all_weights(1); // and update weights
                                 }
-                                else
-                                {
-                                    //Skip traning f+2 because we are in only 1 step before terminal state
-                                    cout << "debug write out frame_g = " << frame_g << endl;//remove this line later..
-                                }
-                                
-
                             }
                             else
                             {
