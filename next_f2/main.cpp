@@ -434,12 +434,18 @@ int main()
         file << "next_scene_hid_nodes_L2 = " << next_scene_hid_nodes_L2 << endl;
         file << "next_scene_hid_nodes_L3 = " << next_scene_hid_nodes_L3 << endl;
 
+        file << "next_F2_scene_hid_nodes_L1 = " << next_F2_scene_hid_nodes_L1 << endl;
+        file << "next_F2_scene_hid_nodes_L2 = " << next_F2_scene_hid_nodes_L2 << endl;
+        file << "next_F2_scene_hid_nodes_L3 = " << next_F2_scene_hid_nodes_L3 << endl;
+
         file << "policy_net_hid_nodes_L1 = " << policy_net_hid_nodes_L1 << endl;
         file << "policy_net_hid_nodes_L2 = " << policy_net_hid_nodes_L2 << endl;
         file << "policy_net_hid_nodes_L3 = " << policy_net_hid_nodes_L3 << endl;
 
         file << "next_scene_fc_net.learning_rate = " << next_scene_fc_net.learning_rate << endl;
         file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;
+        file << "next_F2_scene_fc_net.learning_rate = " << next_F2_scene_fc_net.learning_rate << endl;
+        file << "next_F2_scene_fc_net.momentum = " << next_F2_scene_fc_net.momentum << endl;        
         file << "policy_fc_net.learning_rate = " << policy_fc_net.learning_rate << endl;
         file << "policy_fc_net.momentum = " << policy_fc_net.momentum << endl;
 
@@ -791,6 +797,15 @@ int main()
                             {
                                 imshow("resized_grapics", resized_grapics); //  resize(src, dst, size);
                                 // waitKey(1);
+                                for(int l=0;l<(nr_of_actions*nr_of_actions -1 );l++)
+                                {
+                                    //Add white lines in between every square in graphics
+                                    int row = l * pixel_height -1 + pixel_height;
+                                    for(int col=0;col<pixel_width;col++)
+                                    {
+                                        mat_next_F2_scene_all_actions.at<float>(row, col) = 1.0;
+                                    }
+                                }
                                 imshow("mat_next_F2_scene_all_actions", mat_next_F2_scene_all_actions);
                                 imshow("mat_next_scene_all_actions", mat_next_scene_all_actions);
                                 waitKey(1);
@@ -1338,6 +1353,7 @@ int main()
             {
                 save_cnt = 0;
                 next_scene_fc_net.save_weights(next_scene_net_filename);
+                next_F2_scene_fc_net.save_weights(next_F2_scene_net_filename);
                 policy_fc_net.save_weights(policy_fc_net_filename);
             }
             // End
