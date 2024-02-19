@@ -194,6 +194,12 @@ int main()
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions * nr_of_actions, pixel_width, CV_32FC1);
+
+    Mat mat_debug_F2_input, mat_debug_F2_output, mat_debug_F2_target;
+    mat_debug_F2_input.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
+    mat_debug_F2_output.create(pixel_height, pixel_width, CV_32FC1);
+    mat_debug_F2_target.create(pixel_height, pixel_width, CV_32FC1);
+
     
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
@@ -290,6 +296,9 @@ int main()
     const double policy_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
+    next_F2_scene_fc_net.learning_rate = 0.001;
+    next_F2_scene_fc_net.momentum = 0.1; //
+
     policy_fc_net.learning_rate = 0.001;
     policy_fc_net.momentum = 0.2; //
 
@@ -1267,6 +1276,33 @@ int main()
                                     }
                                     next_F2_scene_fc_net.backpropagtion();      // Train
                                     next_F2_scene_fc_net.update_all_weights(1); // and update weights
+
+
+                                    //debug
+    //mat_debug_F2_input.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
+    //mat_debug_F2_output.create(pixel_height, pixel_width, CV_32FC1);
+    //mat_debug_F2_target.create(pixel_height, pixel_width, CV_32FC1);
+
+                                    for (int f = 0; f < nr_frames_strobed; f++)
+                                    {
+                                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                        {
+                                            int row = f * pixel_width + (pix_idx / pixel_width);
+                                            int col = pix_idx % pixel_width;
+                                            mat_debug_F2_input.at<float>(row, col) = next_F2_scene_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)];
+                                        
+                                            if(f==0)
+                                            {
+                                               mat_debug_F2_output.at<float>(row, col) = next_F2_scene_fc_net.output_layer[pix_idx];
+                                               mat_debug_F2_target.at<float>(row, col) = next_F2_scene_fc_net.target_layer[pix_idx];
+                                            }
+                                        }
+                                    }
+                                    imshow("mat_debug_F2_input", mat_debug_F2_input);
+                                    imshow("mat_debug_F2_output", mat_debug_F2_output);
+                                    imshow("mat_debug_F2_target", mat_debug_F2_target);
+                                    waitKey(1);
+                                    //
                                 }
                             }
                             else
