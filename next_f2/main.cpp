@@ -27,6 +27,8 @@ using namespace std;
 #define ONE_STEP_BEFORE_TERMINAL_STATE 1
 #define NOW_TERMINAL_STATE 2
 
+//#define USE_REPLAY_FP1_TO_FEED_FP2_FRAME_PREDICTOR
+
 const int pixel_height = 35; /// The input data pixel height, note game_Width = 220
 const int pixel_width = 35;  /// The input data pixel width, note game_Height = 200
 const int nr_of_actions = 3;
@@ -120,6 +122,7 @@ int main()
         replay_1_episode_data_buffer.push_back(replay_struct_item);
     }
 
+ 
     //=========== Neural Network size settings ==============
     fc_m_resnet next_scene_fc_net;//For predict f+1 frame from f-3,f-2,f-1,f0
     fc_m_resnet next_F2_scene_fc_net;//For predict f+2 frame from f-2,f-1,f0,f+1
@@ -190,6 +193,7 @@ int main()
     Mat mat_f0_policy_net_first_layer_view;
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
+ //   mat_next_scene_selected_actions_replay_mem.create(pixel_height * g_replay_size, pixel_width, CV_32FC1);
     mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions * nr_of_actions, pixel_width, CV_32FC1);
     
 
@@ -1226,6 +1230,47 @@ int main()
                                 }
                                 next_scene_fc_net.backpropagtion();      // Train
                                 next_scene_fc_net.update_all_weights(1); // and update weights
+
+                                //Now also training next_F2_scene_fc_net
+                                //Load input frame video from replay memory f-2, f-1, f0 and f+1 where f+1 comes from next_scene_fc_net output just made above and 
+                                int inp_fp1_idx = 0;
+                                if(frame_g < gameObj1.nr_of_frames - 2)
+                                {
+                                    for (int f = 0; f < nr_frames_strobed - 1; f++)// -1 because we don't take f+1 from replay memory
+                                    {
+                                        for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                        {
+#ifdef USE_REPLAY_FP1_TO_FEED_FP2_FRAME_PREDICTOR
+                                            // Load the prediction network with input frame video from replay memory
+                                            next_F2_scene_fc_net.input_layer[pix_idx] = next_scene_fc_net.target_layer[pix_idx];
+#else
+                                            // Load the prediction network with f+1 frame video from predicted f+1 frame next_scene_fc_net.output_layer
+                                            next_F2_scene_fc_net.input_layer[pix_idx] = next_scene_fc_net.output_layer[pix_idx];
+#endif
+                                        }
+                                    }
+                                    // Load taken action from replay memory
+                                    for (int i = 0; i < nr_of_actions; i++)
+                                    {
+                                        double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g + 1].selected_action);
+                                        next_F2_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                                    }
+                                    next_F2_scene_fc_net.forward_pass();
+                                    for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                                    {
+                                        // Load the targer data from reply buffer to train the next pred net
+                                        next_F2_scene_fc_net.target_layer[pix_idx] = (double)replay_buffer[g_replay_cnt][frame_g + 2].video_frame[pix_idx];
+                                    }
+                                    next_F2_scene_fc_net.backpropagtion();      // Train
+                                    next_F2_scene_fc_net.update_all_weights(1); // and update weights
+                                }
+                                else
+                                {
+                                    //Skip traning f+2 because we are in only 1 step before terminal state
+                                    cout << "debug write out frame_g = " << frame_g << endl;//remove this line later..
+                                }
+                                
+
                             }
                             else
                             {
