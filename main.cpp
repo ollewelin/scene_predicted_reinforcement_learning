@@ -652,6 +652,7 @@ int main()
                                                 if (sum_up_all_action_value_at_term_state > strongest_action_value)
                                                 {
                                                     which_next_frame_have_stongest_action = act;
+                                                    strongest_action_value = sum_up_all_action_value_at_term_state;//2024-02-20 13:41
                                                 }
                                             }
                                         }
