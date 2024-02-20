@@ -25,7 +25,8 @@ using namespace std;
 #define MOVE_STOP 2
 #define NORMAL_STATE 0
 #define ONE_STEP_BEFORE_TERMINAL_STATE 1
-#define NOW_TERMINAL_STATE 2
+#define TWO_STEP_BEFORE_TERMINAL_STATE 2
+#define NOW_TERMINAL_STATE 3
 
 //#define USE_REPLAY_FP1_TO_FEED_FP2_FRAME_PREDICTOR
 
@@ -69,6 +70,8 @@ double make_one_hot_enc(int loop_index, int action_taked)
 typedef struct
 {
     vector<double> video_frame; // vector of doubles to store the video frame
+    vector<double> video_selected_F1_frame;
+    vector<double> video_selected_F2_frame;
     int selected_action;        // integer to store the selected action
     int dice_used;              // integer to store if the dice was used = 1 or not used = 0
     double rewards_Q;           // store the rewards at real game. Then recalculate this before training with a decay factor
@@ -115,6 +118,8 @@ int main()
     replay_struct_item.dice_used = 0;
     replay_struct_item.rewards_Q = 0.0;
     replay_struct_item.video_frame.resize(pixel_height * pixel_width);
+    replay_struct_item.video_selected_F1_frame.resize(pixel_height * pixel_width);
+    replay_struct_item.video_selected_F2_frame.resize(pixel_height * pixel_width);
 
     vector<replay_data_struct> replay_1_episode_data_buffer;
     for (int i = 0; i < gameObj1.nr_of_frames; ++i)
@@ -597,7 +602,11 @@ int main()
                     {
                         term_state = ONE_STEP_BEFORE_TERMINAL_STATE;
                     }
-                    if (frame_g < gameObj1.nr_of_frames - 2)
+                    if (frame_g == gameObj1.nr_of_frames - 3)
+                    {
+                        term_state = TWO_STEP_BEFORE_TERMINAL_STATE;
+                    }
+                    if (frame_g < gameObj1.nr_of_frames - 3)
                     {
                         term_state = NORMAL_STATE;
                     }
@@ -667,26 +676,27 @@ int main()
                                         next_scene_fc_net.input_layer[inp_n_idx + i] = one_hot_encode_action_input_node; // One hot encoding
                                     }
                                     next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
-
+                                    
                                     // Store all predictied next video frame for each diffrent action.
                                     for (int row = 0; row < pixel_height; row++)
                                     {
                                         for (int col = 0; col < mat_next_scene_all_actions.cols; col++)
                                         {
                                             // Store all predictied next video frame for each diffrent action.
-                                            double next_sc_pix = next_scene_fc_net.output_layer[row * pixel_width + col];
+                                            int pix_indx = row * pixel_width + col;
+                                            double next_sc_pix = next_scene_fc_net.output_layer[pix_indx];
+                                            replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[pix_indx] = next_sc_pix;//Store selected F1 scene for traning policy later in training loop
                                             mat_next_scene_all_actions.at<float>(row + act_f0_to_fp1 * pixel_height, col) = next_sc_pix;
                                             if (term_state == ONE_STEP_BEFORE_TERMINAL_STATE) // Use only f+1 predictor if the state is 1 step before terminal state. We skip do f+2 prediction here because we can't predict beyond terminal state
                                             {
-                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;
+                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + pix_indx] = next_sc_pix;
                                             }
                                         }
                                     }
-
                                 }
                             }
 
-                            if (term_state == NORMAL_STATE) // We can only use f+2 predictor if the state are 2 steps before terminal state. Otherwise we skip f+2 prediction
+                            if (term_state == NORMAL_STATE || term_state == TWO_STEP_BEFORE_TERMINAL_STATE) // We can only use f+2 predictor if the state are 2 steps before terminal state. Otherwise we skip f+2 prediction
                             {
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
@@ -722,9 +732,11 @@ int main()
                                             for (int col = 0; col < mat_next_F2_scene_all_actions.cols; col++)
                                             {
                                                 // Store all predictied next video frame for each diffrent action.
-                                                double next_sc_pix = next_F2_scene_fc_net.output_layer[row * pixel_width + col];
+                                                int pix_indx = row * pixel_width + col;
+                                                double next_sc_pix = next_F2_scene_fc_net.output_layer[pix_indx];
+                                                replay_buffer[g_replay_cnt][frame_g].video_selected_F2_frame[pix_indx] = next_sc_pix;//Store selected F2 scene for traning policy later in training loop
                                                 mat_next_F2_scene_all_actions.at<float>(row + act_fp1_to_fp2 * pixel_height + act_f0_to_fp1 * pixel_height * nr_of_actions, col) = next_sc_pix;
-                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix;//Insert f+2 into policy network
+                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + pix_indx] = next_sc_pix;//Insert f+2 into policy network
                                             }
                                         }
                                         // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action
@@ -735,14 +747,12 @@ int main()
                                             for (int i = 0; i < nr_of_actions; i++)
                                             {
                                                 double action_policy_net_output = policy_fc_net.output_layer[i];
-                                                if (frame_g < gameObj1.nr_of_frames - 3)
+                                                if (term_state == NORMAL_STATE)
                                                 {
                                                     if (action_policy_net_output > strongest_action_value)
                                                     {
                                                         strongest_action_value = action_policy_net_output;     // Store the strongest policy value
-                                                        which_next_frame_have_stongest_action = act_f0_to_fp1 * nr_of_actions + act_fp1_to_fp2; // Store what action prediced frame of the next predicted frame have the strongest action value
-                                                        // what_act_was_stongest_i_debug = i;
-                                                        // debug_v = strongest_action_value;
+                                                        which_next_frame_have_stongest_action = act_f0_to_fp1; //
                                                     }
                                                 }
                                                 else
@@ -763,6 +773,7 @@ int main()
                                                         if (sum_up_all_action_value_at_term_state > strongest_action_value)
                                                         {
                                                             which_next_frame_have_stongest_action = act_f0_to_fp1;
+                                                            strongest_action_value = sum_up_all_action_value_at_term_state;//2024-02-20 13:41
                                                         }
                                                     }
                                                 }
@@ -780,17 +791,14 @@ int main()
                                         }
                                     }
                                 }
-                                if (frame_g < gameObj1.nr_of_frames - 3)
-                                {
-                                    // 3 step before terminal state
-                                    gameObj1.move_up = which_next_frame_have_stongest_action / nr_of_actions; // which_next_frame_have_stongest_action / nr_of_actions
-                                }
-                                else
-                                {
-                                    // TWO_STEP_BEFORE_TERMINAL_STATE
-                                    gameObj1.move_up = which_next_frame_have_stongest_action; // which_next_frame_have_stongest_action
-                                }
+                                gameObj1.move_up = which_next_frame_have_stongest_action; // which_next_frame_have_stongest_action
                                 replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
+                            }
+                            else
+                            {
+                                // ONE_STEP_BEFORE_TERMINAL_STATE
+                                //TODO do this code also
+
                             }
                             // Show next frame prediction
                             // if(frame_g < gameObj1.nr_of_frames - 10)
@@ -983,7 +991,7 @@ int main()
                             //So w
                             //********** Forward next predict net ********
                             int inp_n_idx = 0;
-
+                            int inp_nF2_idx = 0;
                             // Load input frame video from replay memory
                             for (int f = 0; f < nr_frames_strobed; f++)
                             {
@@ -992,6 +1000,11 @@ int main()
                                     double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
                                     //  Load the prediction network with input frame video from replay memory
                                     next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                    if(f>0)
+                                    {
+                                        next_F2_scene_fc_net.input_layer[inp_nF2_idx] = pixel_d;
+                                        inp_nF2_idx++;
+                                    }
                                     inp_n_idx++;
                                 }
                             }
@@ -1003,6 +1016,21 @@ int main()
                             }
                             next_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
                             //*******************************************
+                            for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
+                            {
+                                // Load predictied next f+1 video frame into F2 net.
+                                next_F2_scene_fc_net.input_layer[inp_nF2_idx] = next_scene_fc_net.output_layer[pix_idx]; // Insert f+1 
+                                inp_nF2_idx++;
+                            }
+                            // Load taken action from replay memory
+                            for (int i = 0; i < nr_of_actions; i++)
+                            {
+                                double one_hot_encode_action_input_node = make_one_hot_enc(i, replay_buffer[g_replay_cnt][frame_g + 1].selected_action);
+                                next_F2_scene_fc_net.input_layer[inp_nF2_idx + i] = one_hot_encode_action_input_node; // One hot encoding
+                            }
+                            next_F2_scene_fc_net.forward_pass(); // Do one prediction of next video frame how it will looks on one single specific action taken.
+                            //*******************************************
+//---------------------------
 
                             inp_n_idx = 0;
                             for (int f = 0; f < nr_frames_strobed; f++)
