@@ -627,6 +627,7 @@ int main()
                             switch (term_state)
                             {
                             case NORMAL_STATE:
+                                //Preload policy net with f-1 and f0 when three step before terminal state
                                 for (int f = 0; f < nr_frames_strobed; f++)
                                 {
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
@@ -665,6 +666,7 @@ int main()
                                 break;
                             case TWO_STEP_BEFORE_TERMINAL_STATE:
                                 // Skip use of next_F2 when TWO_STEP_BEFORE_TERMINAL_STATE is the case
+                                //Preload policy net with f-2, f-1 and f0 when two step before terminal state
                                 for (int f = 0; f < nr_frames_strobed; f++)
                                 {
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
@@ -698,6 +700,7 @@ int main()
                             case ONE_STEP_BEFORE_TERMINAL_STATE:
 
                                 // Skip use of next F1 and F2 when ONE_STEP_BEFORE_TERMINAL_STATE is the case
+                                //Preload policy net with f-3, f-2, f-1 and f0 when two step before terminal state
                                 for (int f = 0; f < nr_frames_strobed; f++)
                                 {
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
@@ -712,7 +715,7 @@ int main()
                                 break;
                             }
                             
-                            //load f+2 network  
+                            //load f+2 network with f+1 frame and predict f+2
                             if (term_state == NORMAL_STATE || term_state == TWO_STEP_BEFORE_TERMINAL_STATE)
                             {
                                 // do next F1 scene predciction of the 3 actions in f+1 if we 2 or 3 step before terminal state
@@ -745,14 +748,14 @@ int main()
                             }
 
                             double strongest_action_value = -DBL_MAX;
-                            double sum_up_all_action_value_at_term_state = 0;
-                            int which_next_frame_have_stongest_action = 0; // 0..8 when 3*3 actions
+
+                            int best_selected_policy_f0_state = 0; // 0..8 when 3*3 actions
 
 
                             switch (term_state)
                             {
                             case NORMAL_STATE:
-
+                                //Run policy with f-1, f0, f+1 and f+2 when three step before terminal state
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
                                     int indx_one_frame = 0;
@@ -803,7 +806,7 @@ int main()
                                                 if (action_policy_net_output > strongest_action_value)
                                                 {
                                                     strongest_action_value = action_policy_net_output;     // Store the strongest policy value
-                                                    which_next_frame_have_stongest_action = act_f0_to_fp1; //
+                                                    best_selected_policy_f0_state = act_f0_to_fp1; //
                                                 }
                                             }
                                         }
@@ -814,7 +817,7 @@ int main()
                                             if (action_policy_net_output > strongest_action_value)
                                             {
                                                 strongest_action_value = action_policy_net_output;     // Store the strongest policy value
-                                                which_next_frame_have_stongest_action = act_f0_to_fp1; //
+                                                best_selected_policy_f0_state = act_f0_to_fp1; //
                                             }
                                         }
                                     }
@@ -823,7 +826,7 @@ int main()
 
                                 
                             case TWO_STEP_BEFORE_TERMINAL_STATE:
-
+                                //Run policy with f-2, f-1, f0 and f+1 when two step before terminal state
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
                                     int indx_one_frame = 0;
@@ -838,47 +841,44 @@ int main()
                                         }
                                     }
                                     policy_fc_net.forward_pass();
+
+                                    // TWO_STEP_BEFORE_TERMINAL_STATE
                                     for (int i = 0; i < nr_of_actions; i++)
                                     {
                                         double action_policy_net_output = policy_fc_net.output_layer[i];
-                                        // TWO_STEP_BEFORE_TERMINAL_STATE
-                                        if (i == 0)
+                                        if (action_policy_net_output > strongest_action_value)
                                         {
-                                            sum_up_all_action_value_at_term_state = 0;
-                                        }
-                                        sum_up_all_action_value_at_term_state += action_policy_net_output;
-                                        if (i == nr_of_actions - 1)
-                                        {
-                                            // Check agianst the other next predicted frame summed action values
-                                            if (sum_up_all_action_value_at_term_state > strongest_action_value)
-                                            {
-                                                which_next_frame_have_stongest_action = act_f0_to_fp1;
-                                                strongest_action_value = sum_up_all_action_value_at_term_state; // 2024-02-20 13:41
-                                            }
+                                            strongest_action_value = action_policy_net_output; // Store the strongest policy value
+                                            best_selected_policy_f0_state = act_f0_to_fp1;     //
                                         }
                                     }
                                 }
                                 break;
                             case ONE_STEP_BEFORE_TERMINAL_STATE:
 
-                            //TODO
-
+                                //TODO
+                                //Only post and preset frame load to policy net. 
+                                //Run policy with f-3, f-2, f-1 and f0 when one step before terminal state
+                                    policy_fc_net.forward_pass();
+                                    // TWO_STEP_BEFORE_TERMINAL_STATE
+                                    for (int i = 0; i < nr_of_actions; i++)
+                                    {
+                                        double action_policy_net_output = policy_fc_net.output_layer[i];
+                                        if (action_policy_net_output > strongest_action_value)
+                                        {
+                                            strongest_action_value = action_policy_net_output; // Store the strongest policy value
+                                            best_selected_policy_f0_state = i;                 //
+                                        }
+                                    }
 
                                 break;
                             default:
                                 break;
                             }
 
-                            if (term_state == NORMAL_STATE || term_state == TWO_STEP_BEFORE_TERMINAL_STATE) // We can only use f+2 predictor if the state are 2 steps before terminal state. Otherwise we skip f+2 prediction
-                            {
-                                gameObj1.move_up = which_next_frame_have_stongest_action; // which_next_frame_have_stongest_action
-                                replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
-                            }
-                            else
-                            {
-                                // ONE_STEP_BEFORE_TERMINAL_STATE
-                                // TODO do this code also
-                            }
+                            gameObj1.move_up = best_selected_policy_f0_state; // best_selected_policy_f0_state
+                            replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
+
                             // Show next frame prediction
                             // if(frame_g < gameObj1.nr_of_frames - 10)
                             {
@@ -1371,7 +1371,7 @@ int main()
 
                                 // Now also training next_F2_scene_fc_net
                                 // Load input frame video from replay memory f-2, f-1, f0 and f+1 where f+1 comes from next_scene_fc_net output just made above and
-                                int inp_fp1_idx = 0;
+                          //      int inp_fp1_idx = 0;
                                 if (frame_g < gameObj1.nr_of_frames - 2)
                                 {
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
