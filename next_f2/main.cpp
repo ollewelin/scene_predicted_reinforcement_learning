@@ -175,7 +175,8 @@ int main()
     policy_fc_net.use_skip_connect_mode = 0;
     policy_fc_net.use_dropouts = 0;
     policy_fc_net.dropout_proportion = 0.0;
-    policy_fc_net.clip_deriv = 0;
+    policy_fc_net.clip_deriv = 1;
+    policy_fc_net.L2_norm_regulate = 0.2;
 
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
@@ -1065,6 +1066,8 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     std::cout << "\033[F";
                     cout << " policy net train count down = " << number_of_policy_train_tot - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << endl;
                     std::cout << "\033[F";
+
+                    int get_replay_indx_sel_act_and_rewards = 0;
                     switch (term_state)
                     {
                     case NORMAL_STATE:
@@ -1090,7 +1093,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 }
                             }
                         }
-
+                        get_replay_indx_sel_act_and_rewards = frame_g + 2;
                         break;
                     case TWO_STEP_BEFORE_TERMINAL_STATE:
                         // Skip use of next_F2 when TWO_STEP_BEFORE_TERMINAL_STATE is the case
@@ -1114,6 +1117,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 }
                             }
                         }
+                        get_replay_indx_sel_act_and_rewards = frame_g + 1;
                         break;
                     case ONE_STEP_BEFORE_TERMINAL_STATE:
 
@@ -1126,15 +1130,32 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 policy_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; //
                             }
                         }
+                        get_replay_indx_sel_act_and_rewards = frame_g + 0;
                         break;
                     default:
                         break;
                     }
 
 
-                    // Now also target values are ready for policy netowork training
-                    policy_fc_net.backpropagtion();      // Train
-                    policy_fc_net.update_all_weights(1); // and update weights
+                    if (term_state != NOW_TERMINAL_STATE)
+                    {
+                        int sel_act = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].selected_action;
+                        for (int i = 0; i < nr_of_actions; i++)
+                        {
+                            if (i == sel_act)
+                            {
+                                policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].rewards_Q;
+                            }
+                            else
+                            {
+                                policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i];
+                            }
+                        }
+                        policy_fc_net.forward_pass();
+                        // Now also target values are ready for policy netowork training
+                        policy_fc_net.backpropagtion();      // Train
+                        policy_fc_net.update_all_weights(1); // and update weights
+                    }
 
                     if (d_t_cnt < update_policy_view_after)
                     {
