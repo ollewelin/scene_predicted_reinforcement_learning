@@ -1038,9 +1038,9 @@ skip_scene_predictor_only_for_benchmarking = 0;
         {
             for (int ret_p = 0; ret_p < retrain_policy_net; ret_p++)
             {
-                cout << "********************************************" << endl;
-                cout << "******** TODO NOT finnis f+2 Training policy network ***********" << endl;
-                cout << "********************************************" << endl;
+                cout << "************************************************" << endl;
+                cout << "******** f+2 Training policy network ***********" << endl;
+                cout << "************************************************" << endl;
                 for (int g_replay_cnt = 0; g_replay_cnt < g_replay_size; g_replay_cnt++)
                 {
                     // First thing we doing is recalculate the rewards_Q data from a single one state reward to a decade reward backwards in time in each episode in the reward memory
@@ -1068,6 +1068,8 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     std::cout << "\033[F";
 
                     int get_replay_indx_sel_act_and_rewards = 0;
+
+                    term_state = replay_buffer[g_replay_cnt][frame_g].t_state;
                     switch (term_state)
                     {
                     case NORMAL_STATE:
