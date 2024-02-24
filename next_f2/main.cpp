@@ -840,7 +840,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                     }
                                 }
                                 break;
-
+                                replay_buffer[g_replay_cnt][frame_g + 2].selected_action = best_selected_policy_fp1_state;
                             case TWO_STEP_BEFORE_TERMINAL_STATE:
                                 // Run policy with f-2, f-1, f0 and f+1 when two step before terminal state
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
@@ -877,7 +877,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                         replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[row * pixel_width + col] = pixel_d_fp1; // Store selected F1 scene for traning policy later in training loop
                                     }
                                 }
-
+                                replay_buffer[g_replay_cnt][frame_g + 1].selected_action = best_selected_policy_f0_state;
                                 break;
                             case ONE_STEP_BEFORE_TERMINAL_STATE:
                                 // Only post and preset frame load to policy net.
@@ -892,6 +892,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                         strongest_action_value = action_policy_net_output; // Store the strongest policy value
                                         best_selected_policy_f0_state = i;                 //
                                     }
+                                    replay_buffer[g_replay_cnt][frame_g].selected_action = best_selected_policy_f0_state;
                                 }
                                 break;
                             default:
@@ -980,7 +981,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     //  rand_act_counter++;
                     replay_buffer[g_replay_cnt][frame_g].dice_used = 0; // Skip train next predictied network on this because next predictied net must have filled up history frames to make a prediction
                 }
-                replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
+              //  replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
             if (run_only_random_actions_for_next_scene == 0)
             {
