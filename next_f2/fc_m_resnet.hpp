@@ -44,8 +44,9 @@ public:
     vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
     //Clipping diratives mode
     //0 = Normal mode
-    //1 = clipping irivatives +/-1.0
+    //1 = L2 norm regulation 
     int clip_deriv;
+    double L2_norm_regulate;
 
     //0 = start block 
     //1 = middle block means both i_layer_delta is produced (backpropagate) and o_layer_delta is needed

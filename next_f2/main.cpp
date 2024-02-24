@@ -175,8 +175,8 @@ int main()
     policy_fc_net.use_skip_connect_mode = 0;
     policy_fc_net.use_dropouts = 0;
     policy_fc_net.dropout_proportion = 0.0;
-    policy_fc_net.clip_deriv = 1;
-    policy_fc_net.L2_norm_regulate = 0.2;
+    policy_fc_net.clip_deriv = 0;
+    policy_fc_net.L2_norm_regulate = 1.0;
 
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
@@ -290,7 +290,7 @@ int main()
     //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 1000; // how meny episode on one epoch
+    const int g_replay_size = 100; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
     const int retrain_policy_net = 1;
 
@@ -302,8 +302,9 @@ int main()
     next_F2_scene_fc_net.learning_rate = 0.001;
     next_F2_scene_fc_net.momentum = 0.1; //
 
-    policy_fc_net.learning_rate = 0.005;
-    policy_fc_net.momentum = 0.9; //
+
+    policy_fc_net.learning_rate = 0.001;
+    policy_fc_net.momentum = 0.2; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
