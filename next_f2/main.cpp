@@ -289,7 +289,7 @@ int main()
     //------------------------------------------------------------------------------
     //============ Neural Network Size setup is finnish ! ==================
 
-    const int g_replay_size = 20; // how meny episode on one epoch
+    const int g_replay_size = 1000; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
     const int retrain_policy_net = 1;
 
@@ -312,11 +312,11 @@ int main()
     int warm_up_eps_cnt = 0;
     const double start_epsilon = 0.85;
     const double stop_min_epsilon = 0.001;
-    const double derating_epsilon = 0.0025 * g_replay_size / 1000;
+    const double derating_epsilon = 0.01 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
-    int target_policy_on_next_action_selection = 1;         // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
-    int target_policy_use_f_p_2_pixel_from_predict_net = 1; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Work also use frame f+1 from predict net at traning.
+    //int target_policy_on_next_action_selection = 1;         // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
+    //int target_policy_use_f_p_2_pixel_from_predict_net = 1; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Work also use frame f+1 from predict net at traning.
     const int target_off_set_to_output_itself = 1;          // 1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
@@ -352,6 +352,9 @@ int main()
     }
     cout << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
 
+
+skip_scene_predictor_only_for_benchmarking = 0;
+/*
     cout << "Do you want to use next scene network = Y/N " << endl;
     cin >> answer;
     if (answer == 'Y' || answer == 'y')
@@ -384,7 +387,7 @@ int main()
         target_policy_use_f_p_2_pixel_from_predict_net = 1;
     }
     cout << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
-
+*/
     int epoch_start = 0;
     cout << "Do you want to set a epoch start number (to contine the log files from before) <Y>/<N>" << endl;
     cin >> answer;
@@ -453,8 +456,8 @@ int main()
         file << "g_replay_size = " << g_replay_size << endl;
         file << "derating_epsilon = " << derating_epsilon << endl;
         file << "gamma_decay = " << gamma_decay << endl;
-        file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
-        file << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
+        //file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
+        //file << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
         file << "target_off_set_to_output_itself = " << target_off_set_to_output_itself << endl;
         file << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
         file << "policy_fc_net.use_dropouts =" << policy_fc_net.use_dropouts << endl;
