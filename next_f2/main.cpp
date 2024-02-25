@@ -133,19 +133,19 @@ int main()
     //=========== Neural Network size settings ==============
     fc_m_resnet next_scene_fc_net;    // For predict f+1 frame from f-3,f-2,f-1,f0
     fc_m_resnet next_F2_scene_fc_net; // For predict f+2 frame from f-2,f-1,f0,f+1
-    fc_m_resnet policy_fc_net;
+    fc_m_resnet quality_fc_net;
     int save_cnt = 0;
 
     string next_scene_net_filename;
     next_scene_net_filename = "next_scene_net_weights.dat";
     string next_F2_scene_net_filename;
     next_F2_scene_net_filename = "next_F2_scene_net_weights.dat";
-    string policy_fc_net_filename;
-    policy_fc_net_filename = "policy_fc_net_weights.dat";
+    string quality_fc_net_filename;
+    quality_fc_net_filename = "quality_fc_net_weights.dat";
     string log_file_next_scene_net_loss;
     log_file_next_scene_net_loss = "log_file_next_scene_net_loss.txt";
-    string log_file_policy_net_loss;
-    log_file_policy_net_loss = "log_file_policy_net_loss.txt";
+    string log_file_quality_net_loss;
+    log_file_quality_net_loss = "log_file_quality_net_loss.txt";
     string log_file_win_prob;
     log_file_win_prob = "log_file_win_prob.txt";
 
@@ -168,15 +168,15 @@ int main()
     next_F2_scene_fc_net.dropout_proportion = 0.0;
     next_F2_scene_fc_net.clip_deriv = 0;
 
-    policy_fc_net.block_type = 2;
-    policy_fc_net.use_softmax = 0;
-    policy_fc_net.activation_function_mode = 2;
-    policy_fc_net.force_last_activation_function_mode = 3;
-    policy_fc_net.use_skip_connect_mode = 0;
-    policy_fc_net.use_dropouts = 0;
-    policy_fc_net.dropout_proportion = 0.0;
-    policy_fc_net.clip_deriv = 0;
-    policy_fc_net.L2_norm_regulate = 1.0;
+    quality_fc_net.block_type = 2;
+    quality_fc_net.use_softmax = 0;
+    quality_fc_net.activation_function_mode = 2;
+    quality_fc_net.force_last_activation_function_mode = 3;
+    quality_fc_net.use_skip_connect_mode = 0;
+    quality_fc_net.use_dropouts = 0;
+    quality_fc_net.dropout_proportion = 0.0;
+    quality_fc_net.clip_deriv = 0;
+    quality_fc_net.L2_norm_regulate = 1.0;
 
     const int next_scene_hid_layers = 3;
     const int next_scene_hid_nodes_L1 = 200;
@@ -194,8 +194,8 @@ int main()
 
     // replay_grapics_buffert.create(replay_row_size, replay_col_size, CV_32FC1);
     Mat mat_input_strobe_frames, mat_next_scene_all_actions, mat_next_F2_scene_all_actions;
-    Mat mat_f_last_policy_net_first_layer_view;
-    Mat mat_f0_policy_net_first_layer_view;
+    Mat mat_f_last_quality_net_first_layer_view;
+    Mat mat_f0_quality_net_first_layer_view;
     mat_input_strobe_frames.create(pixel_height * nr_frames_strobed, pixel_width, CV_32FC1);
     mat_next_scene_all_actions.create(pixel_height * nr_of_actions, pixel_width, CV_32FC1);
     mat_next_F2_scene_all_actions.create(pixel_height * nr_of_actions * nr_of_actions, pixel_width, CV_32FC1);
@@ -207,15 +207,15 @@ int main()
 
     cout << "next_scene_inp_nodes = " << next_scene_inp_nodes << endl;
 
-    const int policy_net_hid_layers = 3;
-    const int policy_net_hid_nodes_L1 = 85;
-    const int policy_net_hid_nodes_L2 = 25;
-    const int policy_net_hid_nodes_L3 = 10;
-    const int policy_net_out_nodes = nr_of_actions; //
-    const int policy_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed + nr_of_actions;
-    const int m_p_hight_block = 5; // policy_net_hid_nodes_L1 must be a multiple of this value
-    mat_f_last_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
-    mat_f0_policy_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * policy_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+    const int quality_net_hid_layers = 3;
+    const int quality_net_hid_nodes_L1 = 85;
+    const int quality_net_hid_nodes_L2 = 25;
+    const int quality_net_hid_nodes_L3 = 10;
+    const int quality_net_out_nodes = 1; //Only one singel quality value from one specific scene
+    const int quality_net_inp_nodes = pixel_height * pixel_width * nr_frames_strobed;
+    const int m_p_hight_block = 5; // quality_net_hid_nodes_L1 must be a multiple of this value
+    mat_f_last_quality_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * quality_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
+    mat_f0_quality_net_first_layer_view.create(pixel_height * m_p_hight_block, pixel_width * quality_net_hid_nodes_L1 / m_p_hight_block, CV_32FC1);
 
     //---------- next scene fc net layer setup --------
     for (int i = 0; i < next_scene_inp_nodes; i++)
@@ -252,21 +252,21 @@ int main()
     next_F2_scene_fc_net.set_nr_of_hidden_nodes_on_layer_nr(next_F2_scene_hid_nodes_L3);
 
     //-------- policy net layer setup -----
-    for (int i = 0; i < policy_net_inp_nodes; i++)
+    for (int i = 0; i < quality_net_inp_nodes; i++)
     {
-        policy_fc_net.input_layer.push_back(0.0);
-        policy_fc_net.i_layer_delta.push_back(0.0);
+        quality_fc_net.input_layer.push_back(0.0);
+        quality_fc_net.i_layer_delta.push_back(0.0);
     }
 
-    for (int i = 0; i < policy_net_out_nodes; i++)
+    for (int i = 0; i < quality_net_out_nodes; i++)
     {
-        policy_fc_net.output_layer.push_back(0.0);
-        policy_fc_net.target_layer.push_back(0.0);
+        quality_fc_net.output_layer.push_back(0.0);
+        quality_fc_net.target_layer.push_back(0.0);
     }
-    policy_fc_net.set_nr_of_hidden_layers(policy_net_hid_layers);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L1);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L2);
-    policy_fc_net.set_nr_of_hidden_nodes_on_layer_nr(policy_net_hid_nodes_L3);
+    quality_fc_net.set_nr_of_hidden_layers(quality_net_hid_layers);
+    quality_fc_net.set_nr_of_hidden_nodes_on_layer_nr(quality_net_hid_nodes_L1);
+    quality_fc_net.set_nr_of_hidden_nodes_on_layer_nr(quality_net_hid_nodes_L2);
+    quality_fc_net.set_nr_of_hidden_nodes_on_layer_nr(quality_net_hid_nodes_L3);
 
     //  Note that set_nr_of_hidden_nodes_on_layer_nr() cal must be exactly same number as the set_nr_of_hidden_layers(end_hid_layers)
 
@@ -292,19 +292,19 @@ int main()
 
     const int g_replay_size = 100; // how meny episode on one epoch
     const int retrain_next_pred_net_times = 1;
-    const int retrain_policy_net = 1;
+    const int retrain_quality_net = 1;
 
     //=== Now setup the hyper parameters of the Neural Network ====
     const double reward_gain = 1.0;
-    //const double policy_target_off = 0.0;
+    //const double quality_target_off = 0.0;
     next_scene_fc_net.learning_rate = 0.001;
     next_scene_fc_net.momentum = 0.1; //
     next_F2_scene_fc_net.learning_rate = 0.001;
     next_F2_scene_fc_net.momentum = 0.1; //
 
 
-    policy_fc_net.learning_rate = 0.001;
-    policy_fc_net.momentum = 0.2; //
+    quality_fc_net.learning_rate = 0.001;
+    quality_fc_net.momentum = 0.2; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
@@ -317,8 +317,8 @@ int main()
     const double derating_epsilon = 0.01 * g_replay_size / 1000;
     double epsilon = start_epsilon; // Exploring vs exploiting parameter weight if dice above this threshold chouse random action. If dice below this threshold select strongest outoput action node
     const double gamma_decay = 0.85f;
-    //int target_policy_on_next_action_selection = 1;         // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
-    //int target_policy_use_f_p_2_pixel_from_predict_net = 1; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Work also use frame f+1 from predict net at traning.
+    //int target_quality_on_next_action_selection = 1;         // 0= Normal not prefered set policy target value with its rewards to the present decition. 1 = Good prefared Set target value to the future desition
+    //int target_quality_use_f_p_2_pixel_from_predict_net = 1; // 0 = Normal will use frame f+1 from replay buffert at training. 1 = Work also use frame f+1 from predict net at traning.
     const int target_off_set_to_output_itself = 1;          // 1 0= set not selected target off value to 0. 1= set not selected target off value to the output itself
     if (warm_up_eps_nr > 0)
     {
@@ -356,40 +356,6 @@ int main()
 
 
 skip_scene_predictor_only_for_benchmarking = 0;
-/*
-    cout << "Do you want to use next scene network = Y/N " << endl;
-    cin >> answer;
-    if (answer == 'Y' || answer == 'y')
-    {
-        skip_scene_predictor_only_for_benchmarking = 0;
-        cout << "************************************************************************************************" << endl;
-        cout << "Normal mode is selected by user Next scene network will be used with frame future f-2,f-1,f0,f+1 " << endl;
-        cout << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
-        cout << "************************************************************************************************" << endl;
-    }
-    else
-    {
-        skip_scene_predictor_only_for_benchmarking = 1;
-        target_policy_on_next_action_selection = 0;
-        cout << "-----DEPCRETED this mode not implemented fully now this dont work more --------------------------------------------------------------------------------------------------------------------------------------------------------------- " << endl;
-        cout << "Benchmark mode is selected by user Next scene network will NOT be used. Only regular policy only post and pressent frames f-3,f-2,f-1,f0 go to policy reinforcement learning network " << endl;
-        cout << "skip_scene_predictor_only_for_benchmarking = " << skip_scene_predictor_only_for_benchmarking << endl;
-        cout << "------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ " << endl;
-    }
-
-    cout << "Set Y=1 N=0 to target_policy_use_f_p_2_pixel_from_predict_net variable " << endl;
-    cout << "When traning do you want to feed policy network f+1 view from next predicted view as f+1 select Y or feed policy traning f+1 with replay f+1 select N. Select Y/N " << endl;
-    cin >> answer;
-    if (answer == 'Y' || answer == 'y')
-    {
-        target_policy_use_f_p_2_pixel_from_predict_net = 1;
-    }
-    else
-    {
-        target_policy_use_f_p_2_pixel_from_predict_net = 1;
-    }
-    cout << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
-*/
     int epoch_start = 0;
     cout << "Do you want to set a epoch start number (to contine the log files from before) <Y>/<N>" << endl;
     cin >> answer;
@@ -409,7 +375,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
             log_filename = log_file_next_scene_net_loss;
             break;
         case 1:
-            log_filename = log_file_policy_net_loss;
+            log_filename = log_file_quality_net_loss;
             break;
         case 2:
             log_filename = log_file_win_prob;
@@ -444,27 +410,27 @@ skip_scene_predictor_only_for_benchmarking = 0;
         file << "next_F2_scene_hid_nodes_L2 = " << next_F2_scene_hid_nodes_L2 << endl;
         file << "next_F2_scene_hid_nodes_L3 = " << next_F2_scene_hid_nodes_L3 << endl;
 
-        file << "policy_net_hid_nodes_L1 = " << policy_net_hid_nodes_L1 << endl;
-        file << "policy_net_hid_nodes_L2 = " << policy_net_hid_nodes_L2 << endl;
-        file << "policy_net_hid_nodes_L3 = " << policy_net_hid_nodes_L3 << endl;
+        file << "quality_net_hid_nodes_L1 = " << quality_net_hid_nodes_L1 << endl;
+        file << "quality_net_hid_nodes_L2 = " << quality_net_hid_nodes_L2 << endl;
+        file << "quality_net_hid_nodes_L3 = " << quality_net_hid_nodes_L3 << endl;
 
         file << "next_scene_fc_net.learning_rate = " << next_scene_fc_net.learning_rate << endl;
         file << "next_scene_fc_net.momentum = " << next_scene_fc_net.momentum << endl;
         file << "next_F2_scene_fc_net.learning_rate = " << next_F2_scene_fc_net.learning_rate << endl;
         file << "next_F2_scene_fc_net.momentum = " << next_F2_scene_fc_net.momentum << endl;
-        file << "policy_fc_net.learning_rate = " << policy_fc_net.learning_rate << endl;
-        file << "policy_fc_net.momentum = " << policy_fc_net.momentum << endl;
+        file << "quality_fc_net.learning_rate = " << quality_fc_net.learning_rate << endl;
+        file << "quality_fc_net.momentum = " << quality_fc_net.momentum << endl;
 
         file << "g_replay_size = " << g_replay_size << endl;
         file << "derating_epsilon = " << derating_epsilon << endl;
         file << "gamma_decay = " << gamma_decay << endl;
-        //file << "target_policy_on_next_action_selection = " << target_policy_on_next_action_selection << endl;
-        //file << "target_policy_use_f_p_2_pixel_from_predict_net = " << target_policy_use_f_p_2_pixel_from_predict_net << endl;
+        //file << "target_quality_on_next_action_selection = " << target_quality_on_next_action_selection << endl;
+        //file << "target_quality_use_f_p_2_pixel_from_predict_net = " << target_quality_use_f_p_2_pixel_from_predict_net << endl;
         file << "target_off_set_to_output_itself = " << target_off_set_to_output_itself << endl;
         file << "skip_traning_next_scenen = " << skip_traning_next_scenen << endl;
-        file << "policy_fc_net.use_dropouts =" << policy_fc_net.use_dropouts << endl;
-        file << "policy_fc_net.dropout_proportion = " << policy_fc_net.dropout_proportion << endl;
-        file << "retrain_policy_net = " << retrain_policy_net << endl;
+        file << "quality_fc_net.use_dropouts =" << quality_fc_net.use_dropouts << endl;
+        file << "quality_fc_net.dropout_proportion = " << quality_fc_net.dropout_proportion << endl;
+        file << "retrain_quality_net = " << retrain_quality_net << endl;
         // file << "epoch = " << epoch << " Win probaility Now = " << now_win_probability * 100.0 << "% at play count = " << win_p_cnt + 1 << " Old win probablilty = " << last_win_probability * 100.0 << "% total plays = " << total_plays << endl;
         file.close();
     }
@@ -488,14 +454,14 @@ skip_scene_predictor_only_for_benchmarking = 0;
         replay_buffer.push_back(replay_1_episode_data_buffer);
     }
 
-    vector<int> train_policy_net_rand_list;
-    // const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
-    const int number_of_policy_train_frm = gameObj1.nr_of_frames - nr_frames_strobed;
-    const int number_of_policy_train_tot = g_replay_size * number_of_policy_train_frm;
-    const int update_policy_view_after = number_of_policy_train_tot / 10;
-    for (int i = 0; i < number_of_policy_train_tot; i++)
+    vector<int> train_quality_net_rand_list;
+    // const int number_of_quality_train_frm = gameObj1.nr_of_frames - nr_frames_strobed + 1;
+    const int number_of_quality_train_frm = gameObj1.nr_of_frames - nr_frames_strobed;
+    const int number_of_quality_train_tot = g_replay_size * number_of_quality_train_frm;
+    const int update_quality_view_after = number_of_quality_train_tot / 10;
+    for (int i = 0; i < number_of_quality_train_tot; i++)
     {
-        train_policy_net_rand_list.push_back(i);
+        train_quality_net_rand_list.push_back(i);
     }
 
     cout << " gameObj1.nr_of_frames = " << gameObj1.nr_of_frames << endl;
@@ -512,20 +478,20 @@ skip_scene_predictor_only_for_benchmarking = 0;
         cin >> answer;
         if (answer == 'Y' || answer == 'y')
         {
-            policy_fc_net.randomize_weights(init_random_weight_propotion);
+            quality_fc_net.randomize_weights(init_random_weight_propotion);
             cout << "Randomized policy network by user. But the next_scene_fc_net weights loaded from file" << endl;
         }
         else
         {
-            policy_fc_net.load_weights(policy_fc_net_filename);
+            quality_fc_net.load_weights(quality_fc_net_filename);
         }
     }
     else
     {
         next_scene_fc_net.randomize_weights(init_random_weight_propotion);
         next_F2_scene_fc_net.randomize_weights(init_random_weight_propotion);
-        policy_fc_net.randomize_weights(init_random_weight_propotion);
-        //    policy_fc_net.randomize_weights(1.5);
+        quality_fc_net.randomize_weights(init_random_weight_propotion);
+        //    quality_fc_net.randomize_weights(1.5);
     }
 
     cout << "gameObj1.gameObj1.game_Height " << gameObj1.game_Height << endl;
@@ -639,31 +605,22 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                     {
                                         double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                        if (skip_scene_predictor_only_for_benchmarking == 0)
+                                        // use the prediction network stadegy
+                                        next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+
+                                        if (inp_n_idx > first_frame_size)
                                         {
-                                            // use the prediction network stadegy
-                                            next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-
-                                            if (inp_n_idx > first_frame_size)
-                                            {
-                                                // Insert present and post frame to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
-                                                next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size]
-                                            }
-
-                                            if (pix_idx > first_frame_size * 2) // * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
-                                            {
-                                                // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
-                                                // we will skip insert f-3,f-2  to policy net. f-3,f-2 only used for next_scene_fc_net.input_layer
-                                                // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0. And next_F2_scene_fc_net  use f-2,f-1,f0,f+1
-                                                // policy_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                                policy_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
-                                            }
+                                            // Insert present and post frame to next_F2_scene_fc_net  use f-2,f-1,f0 here and after next_scene_fc_net have been forward then instert f+1
+                                            next_F2_scene_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Insert f-2 from index 0 into this _F2_ network therfore the [inp_n_idx - first_frame_size]
                                         }
-                                        else
+
+                                        if (pix_idx > first_frame_size * 2) // * 2 because now we use f+2 as well so we skip f-3,f-2 use instead f-1,f0,f+1,f+2 to policy
                                         {
-                                            // Bench mark methode
-                                            // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                            policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                            // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                            // we will skip insert f-3,f-2  to policy net. f-3,f-2 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0. And next_F2_scene_fc_net  use f-2,f-1,f0,f+1
+                                            // quality_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            quality_fc_net.input_layer[inp_n_idx - first_frame_size * 2] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
                                         inp_n_idx++;
                                     }
@@ -678,25 +635,16 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                     {
                                         double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                        if (skip_scene_predictor_only_for_benchmarking == 0)
+                                        // use the prediction network stadegy
+                                        next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
+                                        int first_frame_size = pixel_width * pixel_height;
+                                        if (pix_idx > first_frame_size)
                                         {
-                                            // use the prediction network stadegy
-                                            next_scene_fc_net.input_layer[inp_n_idx] = pixel_d;
-                                            int first_frame_size = pixel_width * pixel_height;
-                                            if (pix_idx > first_frame_size)
-                                            {
-                                                // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
-                                                // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
-                                                // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
-                                                // policy_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                                policy_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // Bench mark methode
-                                            // Only for benchmark with a regular single policy network insted where I skip use the next frame predictor feature
-                                            policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                            // let say we have 4 frame strobes f-3,f-2,f-1,f0 and then next prediced f+1
+                                            // we will skip instert f-3 to policy net f-3 only used for next_scene_fc_net.input_layer
+                                            // next_scene_fc_net.input_layer use f-3,f-2,f-1,f0
+                                            // quality_fc_net.input_layer instead use f-2,f-1,f0 inserted here and f+1 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                            quality_fc_net.input_layer[inp_n_idx - first_frame_size] = pixel_d; // Skip populate the last pixels how correspond to next predicted frame. next prediced frame will be loaded to input layer after all predictied frames is done later
                                         }
                                         inp_n_idx++;
                                     }
@@ -712,7 +660,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                     for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                     {
                                         double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                        policy_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
+                                        quality_fc_net.input_layer[inp_n_idx] = pixel_d; // Here we load f-3,f-2,f-1,f0 instead of loading f-2,f-1,f0, f+1
                                         inp_n_idx++;
                                     }
                                 }
@@ -755,12 +703,14 @@ skip_scene_predictor_only_for_benchmarking = 0;
 
                             double strongest_action_value = -DBL_MAX;
 
-                            int best_selected_policy_f0_state = 0;  // 0..2 when 3 actions
-                            int best_selected_policy_fp1_state = 0; // 0..8 when 3*3 actions
+                            int best_selected_quality_f0_state = 0;  // 0..2 when 3 actions
+                            int best_selected_quality_fp1_state = 0; // 0..8 when 3*3 actions
+
 
                             switch (term_state)
                             {
                             case NORMAL_STATE:
+                            case TWO_STEP_BEFORE_TERMINAL_STATE:
                                 // Run policy with f-1, f0, f+1 and f+2 when three step before terminal state
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
@@ -772,7 +722,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                             // Read predictied next f+1 video frame foreach diffrent action.
                                             double next_sc_pix = mat_next_scene_all_actions.at<float>(row + act_f0_to_fp1 * pixel_height, col);
                                             next_F2_scene_fc_net.input_layer[first_frame_size * (nr_frames_strobed - 1) + indx_one_frame] = next_sc_pix;             // Insert f+1 from stored predicetd frame from  next_scene_fc_net net from replay memory
-                                            policy_fc_net.input_layer[(nr_frames_strobed - 2) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix; // Insert f+1 into ploicy network
+                                            quality_fc_net.input_layer[(nr_frames_strobed - 2) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix; // Insert f+1 into ploicy network
                                             indx_one_frame++;
                                         }
                                     }
@@ -798,34 +748,17 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                                 double next_sc_pix = next_F2_scene_fc_net.output_layer[pix_indx];
                                                 replay_buffer[g_replay_cnt][frame_g].video_selected_F2_frame[pix_indx] = next_sc_pix; // Store selected F2 scene for traning policy later in training loop
                                                 mat_next_F2_scene_all_actions.at<float>(row + act_fp1_to_fp2 * pixel_height + act_f0_to_fp1 * pixel_height * nr_of_actions, col) = next_sc_pix;
-                                                policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + pix_indx] = next_sc_pix; // Insert f+2 into policy network
+                                                quality_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + pix_indx] = next_sc_pix; // Insert f+2 into policy network
                                             }
                                         }
                                         // Run through prediced frames to the policy network and check it this predicted frame will give the policy net a strongest positive next action
-                                        policy_fc_net.forward_pass();
-
-                                        if (skip_scene_predictor_only_for_benchmarking == 0) // Normal mode
+                                        quality_fc_net.forward_pass();
+                                        double action_quality_net_output = quality_fc_net.output_layer[0];
+                                        if (action_quality_net_output > strongest_action_value)
                                         {
-                                            for (int i = 0; i < nr_of_actions; i++)
-                                            {
-                                                double action_policy_net_output = policy_fc_net.output_layer[i];
-                                                if (action_policy_net_output > strongest_action_value)
-                                                {
-                                                    strongest_action_value = action_policy_net_output;                               // Store the strongest policy value
-                                                    best_selected_policy_f0_state = act_f0_to_fp1;                                   // Used both for policy action and for index store F1 rpedicted image to replay buffert
-                                                    best_selected_policy_fp1_state = act_f0_to_fp1 * nr_of_actions + act_fp1_to_fp2; // used only for select and index store F2 rpedicted image to replay buffert
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // Benchmark mode
-                                            double action_policy_net_output = policy_fc_net.output_layer[act_f0_to_fp1]; // In mbenchmark mode only use [act_f0_to_fp1] instead of [i] becuase now we check first step policy instead
-                                            if (action_policy_net_output > strongest_action_value)
-                                            {
-                                                strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                                best_selected_policy_f0_state = act_f0_to_fp1;     //
-                                            }
+                                            strongest_action_value = action_quality_net_output;                               // Store the strongest policy value
+                                            best_selected_quality_f0_state = act_f0_to_fp1;                                   // Used both for policy action and for index store F1 rpedicted image to replay buffert
+                                            best_selected_quality_fp1_state = act_f0_to_fp1 * nr_of_actions + act_fp1_to_fp2; // used only for select and index store F2 rpedicted image to replay buffert
                                         }
                                     }
                                 }
@@ -834,16 +767,16 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 {
                                     for (int col = 0; col < mat_next_F2_scene_all_actions.cols; col++)
                                     {
-                                        double pixel_d_fp1 = mat_next_scene_all_actions.at<float>(row + best_selected_policy_f0_state * pixel_height, col);
-                                        double pixel_d_fp2 = mat_next_F2_scene_all_actions.at<float>(row + best_selected_policy_fp1_state * pixel_height, col);
+                                        double pixel_d_fp1 = mat_next_scene_all_actions.at<float>(row + best_selected_quality_f0_state * pixel_height, col);
+                                        double pixel_d_fp2 = mat_next_F2_scene_all_actions.at<float>(row + best_selected_quality_fp1_state * pixel_height, col);
                                         replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[row * pixel_width + col] = pixel_d_fp1; // Store selected F1 scene for traning policy later in training loop
                                         replay_buffer[g_replay_cnt][frame_g].video_selected_F2_frame[row * pixel_width + col] = pixel_d_fp2; // Store selected F2 scene for traning policy later in training loop
                                     }
                                 }
                                 break;
-                                replay_buffer[g_replay_cnt][frame_g + 2].selected_action = best_selected_policy_fp1_state;
-                            case TWO_STEP_BEFORE_TERMINAL_STATE:
-                                // Run policy with f-2, f-1, f0 and f+1 when two step before terminal state
+                            //    replay_buffer[g_replay_cnt][frame_g + 2].selected_action = best_selected_quality_fp1_state;
+                            case ONE_STEP_BEFORE_TERMINAL_STATE:
+                                // Run policy with f-2, f-1, f0 and f+1 when one step before terminal state
                                 for (int act_f0_to_fp1 = 0; act_f0_to_fp1 < nr_of_actions; act_f0_to_fp1++)
                                 {
                                     int indx_one_frame = 0;
@@ -853,54 +786,33 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                         {
                                             // Read predictied next f+1 video frame foreach diffrent action.
                                             double next_sc_pix = mat_next_scene_all_actions.at<float>(row + act_f0_to_fp1 * pixel_height, col);
-                                            policy_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix; // Insert f+1 into ploicy network
+                                            quality_fc_net.input_layer[(nr_frames_strobed - 1) * pixel_width * pixel_height + row * pixel_width + col] = next_sc_pix; // Insert f+1 into ploicy network
                                             indx_one_frame++;
                                         }
                                     }
-                                    policy_fc_net.forward_pass();
-
-                                    // TWO_STEP_BEFORE_TERMINAL_STATE
-                                    for (int i = 0; i < nr_of_actions; i++)
+                                    quality_fc_net.forward_pass();
+                                    double action_quality_net_output = quality_fc_net.output_layer[0];
+                                    if (action_quality_net_output > strongest_action_value)
                                     {
-                                        double action_policy_net_output = policy_fc_net.output_layer[i];
-                                        if (action_policy_net_output > strongest_action_value)
-                                        {
-                                            strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                            best_selected_policy_f0_state = act_f0_to_fp1;     //
-                                        }
+                                        strongest_action_value = action_quality_net_output; // Store the strongest policy value
+                                        best_selected_quality_f0_state = act_f0_to_fp1;     //
                                     }
                                 }
                                 for (int row = 0; row < pixel_height; row++)
                                 {
                                     for (int col = 0; col < mat_next_F2_scene_all_actions.cols; col++)
                                     {
-                                        double pixel_d_fp1 = mat_next_scene_all_actions.at<float>(row + best_selected_policy_f0_state * pixel_height, col);
+                                        double pixel_d_fp1 = mat_next_scene_all_actions.at<float>(row + best_selected_quality_f0_state * pixel_height, col);
                                         replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[row * pixel_width + col] = pixel_d_fp1; // Store selected F1 scene for traning policy later in training loop
                                     }
                                 }
-                                replay_buffer[g_replay_cnt][frame_g + 1].selected_action = best_selected_policy_f0_state;
-                                break;
-                            case ONE_STEP_BEFORE_TERMINAL_STATE:
-                                // Only post and preset frame load to policy net.
-                                // Run policy with f-3, f-2, f-1 and f0 when one step before terminal state
-                                policy_fc_net.forward_pass();
-                                // TWO_STEP_BEFORE_TERMINAL_STATE
-                                for (int i = 0; i < nr_of_actions; i++)
-                                {
-                                    double action_policy_net_output = policy_fc_net.output_layer[i];
-                                    if (action_policy_net_output > strongest_action_value)
-                                    {
-                                        strongest_action_value = action_policy_net_output; // Store the strongest policy value
-                                        best_selected_policy_f0_state = i;                 //
-                                    }
-                                    replay_buffer[g_replay_cnt][frame_g].selected_action = best_selected_policy_f0_state;
-                                }
+                            //    replay_buffer[g_replay_cnt][frame_g + 1].selected_action = best_selected_quality_f0_state;
                                 break;
                             default:
                                 break;
                             }
 
-                            gameObj1.move_up = best_selected_policy_f0_state; // best_selected_policy_f0_state
+                            gameObj1.move_up = best_selected_quality_f0_state; // best_selected_quality_f0_state
                             replay_buffer[g_replay_cnt][frame_g].dice_used = 0;
 
                             // Show next frame prediction
@@ -982,7 +894,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     //  rand_act_counter++;
                     replay_buffer[g_replay_cnt][frame_g].dice_used = 0; // Skip train next predictied network on this because next predictied net must have filled up history frames to make a prediction
                 }
-              //  replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
+                replay_buffer[g_replay_cnt][frame_g].selected_action = gameObj1.move_up;
             }
             if (run_only_random_actions_for_next_scene == 0)
             {
@@ -1038,7 +950,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
         cout << endl;
         if (run_only_random_actions_for_next_scene == 0)
         {
-            for (int ret_p = 0; ret_p < retrain_policy_net; ret_p++)
+            for (int ret_p = 0; ret_p < retrain_quality_net; ret_p++)
             {
                 cout << "************************************************" << endl;
                 cout << "******** f+2 Training policy network ***********" << endl;
@@ -1052,21 +964,21 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     }
                 }
                 // Learning policy networks from replay buffer
-                train_policy_net_rand_list = fisher_yates_shuffle(train_policy_net_rand_list); // Randomize the traning order list
-                policy_fc_net.loss_A = 0.0;
+                train_quality_net_rand_list = fisher_yates_shuffle(train_quality_net_rand_list); // Randomize the traning order list
+                quality_fc_net.loss_A = 0.0;
                 int d_t_cnt = 0;
-                for (int train_cnt = 0; train_cnt < number_of_policy_train_tot; train_cnt++)
+                for (int train_cnt = 0; train_cnt < number_of_quality_train_tot; train_cnt++)
                 {
 
-                    int train_nr = train_policy_net_rand_list[train_cnt];
-                    int g_replay_cnt = train_nr / number_of_policy_train_frm;
-                    int frame_g = train_nr % number_of_policy_train_frm;
+                    int train_nr = train_quality_net_rand_list[train_cnt];
+                    int g_replay_cnt = train_nr / number_of_quality_train_frm;
+                    int frame_g = train_nr % number_of_quality_train_frm;
                     frame_g = frame_g + nr_frames_strobed; // Step forward where so the first frames at beginning also could be loaded to policy net
                     // frame_g number is now in range = 4..34 when game frames = 35 and nr_frame_strobe = 4
 
                     cout << "                                                                                                       " << endl;
                     std::cout << "\033[F";
-                    cout << " policy net train count down = " << number_of_policy_train_tot - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << endl;
+                    cout << " policy net train count down = " << number_of_quality_train_tot - train_cnt << " frame_g = " << frame_g << " g_replay_cnt = " << g_replay_cnt << endl;
                     std::cout << "\033[F";
 
                     int get_replay_indx_sel_act_and_rewards = 0;
@@ -1075,6 +987,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                     switch (term_state)
                     {
                     case NORMAL_STATE:
+                    case TWO_STEP_BEFORE_TERMINAL_STATE:
                         for (int f = 0; f < nr_frames_strobed - 1; f++)
                         {
                             if (f < nr_frames_strobed - 2)
@@ -1082,8 +995,8 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
                                     double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + 2 + f].video_frame[pix_idx];// Preload policy net with f-1 and f0 thats why ".. + 2 .." in this (frame_g - nr_frames_strobed + 2 + f) when three step before terminal state
-                                    // policy_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                    policy_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; //
+                                    // quality_fc_net.input_layer instead use f-1,f0 inserted here and f+1 and f+2 will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                    quality_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; //
                                 }
                             }
                             else
@@ -1092,15 +1005,15 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 {
                                     double pixel_d_F1 = (double)replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[pix_idx]; 
                                     double pixel_d_F2 = (double)replay_buffer[g_replay_cnt][frame_g].video_selected_F2_frame[pix_idx]; 
-                                    policy_fc_net.input_layer[pix_idx + first_frame_size * 2] = pixel_d_F1; //
-                                    policy_fc_net.input_layer[pix_idx + first_frame_size * 3] = pixel_d_F2; //
+                                    quality_fc_net.input_layer[pix_idx + first_frame_size * 2] = pixel_d_F1; //
+                                    quality_fc_net.input_layer[pix_idx + first_frame_size * 3] = pixel_d_F2; //
                                 }
                             }
                         }
                         get_replay_indx_sel_act_and_rewards = frame_g + 2;
                         break;
-                    case TWO_STEP_BEFORE_TERMINAL_STATE:
-                        // Skip use of next_F2 when TWO_STEP_BEFORE_TERMINAL_STATE is the case
+                    case ONE_STEP_BEFORE_TERMINAL_STATE:
+                        // Skip use of next_F2 when ONE_STEP_BEFORE_TERMINAL_STATE is the case
                         for (int f = 0; f < nr_frames_strobed; f++)
                         {
                             if (f < nr_frames_strobed - 1)
@@ -1108,8 +1021,8 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
                                     double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + 1 + f].video_frame[pix_idx];// Preload policy net with f-2,f-1 and f0 thats why ".. + 1 .." in this (frame_g - nr_frames_strobed + 1 + f) when three step before terminal state
-                                    // policy_fc_net.input_layer instead use f-2, f-1,f0 inserted here and f+1 (skip f+2) will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
-                                    policy_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; // 
+                                    // quality_fc_net.input_layer instead use f-2, f-1,f0 inserted here and f+1 (skip f+2) will be inserted later when all predicted frams is produced by the next_scene_fc_net.ouput_layer
+                                    quality_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; // 
                                 }
                             }
                             else
@@ -1117,21 +1030,21 @@ skip_scene_predictor_only_for_benchmarking = 0;
                                 for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                                 {
                                     double pixel_d_F1 = (double)replay_buffer[g_replay_cnt][frame_g].video_selected_F1_frame[pix_idx]; 
-                                    policy_fc_net.input_layer[pix_idx + first_frame_size * 3] = pixel_d_F1; //
+                                    quality_fc_net.input_layer[pix_idx + first_frame_size * 3] = pixel_d_F1; //
                                 }
                             }
                         }
                         get_replay_indx_sel_act_and_rewards = frame_g + 1;
                         break;
-                    case ONE_STEP_BEFORE_TERMINAL_STATE:
+                    case NOW_TERMINAL_STATE:
 
-                        // Skip use of next F1 and F2 when ONE_STEP_BEFORE_TERMINAL_STATE is the case
+                        // Skip use of next F1 and F2 when NOW_TERMINAL_STATE is the case
                         for (int f = 0; f < nr_frames_strobed; f++)
                         {
                             for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                             {
                                 double pixel_d = (double)replay_buffer[g_replay_cnt][frame_g - nr_frames_strobed + f].video_frame[pix_idx];
-                                policy_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; //
+                                quality_fc_net.input_layer[pix_idx + f * (pixel_width * pixel_height)] = pixel_d; //
                             }
                         }
                         get_replay_indx_sel_act_and_rewards = frame_g + 0;
@@ -1140,65 +1053,52 @@ skip_scene_predictor_only_for_benchmarking = 0;
                         break;
                     }
 
+//                    int sel_act = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].selected_action;
 
-                    if (term_state != NOW_TERMINAL_STATE)
-                    {
-                        int sel_act = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].selected_action;
-                        for (int i = 0; i < nr_of_actions; i++)
-                        {
-                            if (i == sel_act)
-                            {
-                                policy_fc_net.target_layer[i] = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].rewards_Q;
-                            }
-                            else
-                            {
-                                policy_fc_net.target_layer[i] = policy_fc_net.output_layer[i];
-                            }
-                        }
-                        policy_fc_net.forward_pass();
-                        // Now also target values are ready for policy netowork training
-                        policy_fc_net.backpropagtion();      // Train
-                        policy_fc_net.update_all_weights(1); // and update weights
-                    }
+                    quality_fc_net.target_layer[0] = replay_buffer[g_replay_cnt][get_replay_indx_sel_act_and_rewards].rewards_Q;
+                    quality_fc_net.forward_pass();
+                    // Now also target values are ready for policy netowork training
+                    quality_fc_net.backpropagtion();      // Train
+                    quality_fc_net.update_all_weights(1); // and update weights
 
-                    if (d_t_cnt < update_policy_view_after)
+                    if (d_t_cnt < update_quality_view_after)
                     {
                         d_t_cnt++;
                     }
                     else
                     {
                         d_t_cnt = 0;
-                        // View mat_f_last_policy_net_first_layer_view
+                        // View mat_f_last_quality_net_first_layer_view
                         // vector<vector<vector<double>>> all_weights;//3D [layer_nr][node_nr][weights_from_previous_layer]
-                        for (int L1_node_cnt = 0; L1_node_cnt < policy_net_hid_nodes_L1; L1_node_cnt++)
+                        for (int L1_node_cnt = 0; L1_node_cnt < quality_net_hid_nodes_L1; L1_node_cnt++)
                         {
                             for (int pix_idx = 0; pix_idx < (pixel_width * pixel_height); pix_idx++)
                             {
-                                int row = pixel_height * (L1_node_cnt / (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
-                                int col = pixel_width * (L1_node_cnt % (policy_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
-                                mat_f_last_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 1))] + 0.5;
-                                mat_f0_policy_net_first_layer_view.at<float>(row, col) = policy_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 2))] + 0.5;
+                                int row = pixel_height * (L1_node_cnt / (quality_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx / pixel_width;
+                                int col = pixel_width * (L1_node_cnt % (quality_net_hid_nodes_L1 / m_p_hight_block)) + pix_idx % pixel_width;
+                                mat_f_last_quality_net_first_layer_view.at<float>(row, col) = quality_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 1))] + 0.5;
+                                mat_f0_quality_net_first_layer_view.at<float>(row, col) = quality_fc_net.all_weights[0][L1_node_cnt][pix_idx + (pixel_width * pixel_height * (nr_frames_strobed - 2))] + 0.5;
                             }
                         }
                         if (skip_scene_predictor_only_for_benchmarking == 0)
                         {
-                            imshow("next frame f+1 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
-                            imshow("pressent frame f0 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                            imshow("next frame f+1 policy net first layer weights", mat_f_last_quality_net_first_layer_view);
+                            imshow("pressent frame f0 policy net first layer weights", mat_f0_quality_net_first_layer_view);
                         }
                         else
                         {
-                            imshow("Benchmark pressent frame f0 policy net first layer weights", mat_f_last_policy_net_first_layer_view);
-                            imshow("Benchmark post frame f-1 policy net first layer weights", mat_f0_policy_net_first_layer_view);
+                            imshow("Benchmark pressent frame f0 policy net first layer weights", mat_f_last_quality_net_first_layer_view);
+                            imshow("Benchmark post frame f-1 policy net first layer weights", mat_f0_quality_net_first_layer_view);
                         }
                         waitKey(1);
                     }
                 }
                 cout << endl;
-                cout << "Policy net Loss = " << policy_fc_net.loss_A << endl;
+                cout << "Policy net Loss = " << quality_fc_net.loss_A << endl;
                 cout << endl;
 
-                std::ofstream file(log_file_policy_net_loss, std::ios::app);
-                file << "epoch = " << epoch << " epsilon = " << epsilon << " retrain_policy net = " << ret_p << " Policy net Loss = " << policy_fc_net.loss_A << endl;
+                std::ofstream file(log_file_quality_net_loss, std::ios::app);
+                file << "epoch = " << epoch << " epsilon = " << epsilon << " retrain_policy net = " << ret_p << " Policy net Loss = " << quality_fc_net.loss_A << endl;
                 file.close();
             }
             if (skip_scene_predictor_only_for_benchmarking == 1)
@@ -1403,7 +1303,7 @@ skip_scene_predictor_only_for_benchmarking = 0;
                 save_cnt = 0;
                 next_scene_fc_net.save_weights(next_scene_net_filename);
                 next_F2_scene_fc_net.save_weights(next_F2_scene_net_filename);
-                policy_fc_net.save_weights(policy_fc_net_filename);
+                quality_fc_net.save_weights(quality_fc_net_filename);
             }
             // End
         }
