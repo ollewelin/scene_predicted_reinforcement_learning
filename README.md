@@ -54,8 +54,16 @@ and instead put in only post f-3,f-2,f-1,f0 frame and presenet frame into policy
 
         cat next_scene_net_weights_part_* > next_scene_net_weights.dat
 
+Option
+
+        cat next_F2_scene_net_weights_part_* > next_F2_scene_net_weights.dat
+
 ### Split next_scene_net_weights.dat file
         split -b 8M next_scene_net_weights.dat next_scene_net_weights_part_
+
+Option
+
+        split -b 8M next_F2_scene_net_weights.dat next_F2_scene_net_weights_part_
 
 ### Getting start training in the middle of pretrained data weights
 
