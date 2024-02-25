@@ -303,8 +303,8 @@ int main()
     next_F2_scene_fc_net.momentum = 0.1; //
 
 
-    quality_fc_net.learning_rate = 0.001;
-    quality_fc_net.momentum = 0.2; //
+    quality_fc_net.learning_rate = 0.005;
+    quality_fc_net.momentum = 0.9; //
 
     double init_random_weight_propotion = 0.25;
     const double warm_up_epsilon_default = 0.95;
